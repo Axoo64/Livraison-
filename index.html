@@ -782,6 +782,10 @@ body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif
   <div id="searchResults"></div>
 </div>
 
+<div style="text-align:center;padding:4px 20px 0;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px">
+  🔍 <span id="totalSearchCount">—</span> recherches effectuées
+</div>
+
 <div class="top-section">
   <div class="section-label">Les plus recherchés</div>
   <div id="topGarages"><em style="color:var(--muted);font-size:12px">Les garages les plus recherchés apparaîtront ici automatiquement...</em></div>
@@ -908,74 +912,96 @@ body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif
   </div>
 </div>
 
-<script type="module">
-// ── FIREBASE ─────────────────────────────────────────────────────────────────
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-import { getFirestore, doc, setDoc, collection, getDocs, increment } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+<script>
+// ── SUPABASE ──────────────────────────────────────────────────────────────────
+const SUPA_URL = 'https://aitbhskkwoqmoqfpogph.supabase.co';
+const SUPA_KEY = 'sb_publishable_84rSs3LwBpdWs4qbPd5zkA_dOh-ci4s';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyB6yNjiQXPYSMw-StsKalbYOdFnkzKsgfw",
-  authDomain: "departs-livraison.firebaseapp.com",
-  projectId: "departs-livraison",
-  storageBucket: "departs-livraison.firebasestorage.app",
-  messagingSenderId: "873542021626",
-  appId: "1:873542021626:web:b181bd3e74afddd9347443"
-};
+async function supaFetch(path, method, body) {
+  const opts = {
+    method: method || 'GET',
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'resolution=merge-duplicates' : ''
+    }
+  };
+  if(body) opts.body = JSON.stringify(body);
+  const res = await fetch(SUPA_URL + '/rest/v1/' + path, opts);
+  if(res.status === 204) return null;
+  return res.json();
+}
 
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getFirestore(firebaseApp);
-
-// Exposer les fonctions Firebase sur window pour le script principal
+// Stats partagées
 window.incStatShared = async function(name) {
   try {
-    const ref = doc(db, 'stats', name);
-    await setDoc(ref, { count: increment(1), name: name }, { merge: true });
-  } catch(e) { console.log('Firebase error:', e); }
+    await supaFetch('stats?on_conflict=name', 'POST', {name: name, count: 1});
+    // Upsert via RPC pour incrémenter
+    await fetch(SUPA_URL + '/rest/v1/rpc/increment_stat', {
+      method: 'POST',
+      headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json'},
+      body: JSON.stringify({garage_name: name})
+    });
+  } catch(e) {}
 };
 
 window.getTopShared = async function(n) {
-  n = n || 10;
   try {
-    const snap = await getDocs(collection(db, 'stats'));
-    const entries = [];
-    snap.forEach(function(d){ entries.push([d.data().name, d.data().count]); });
-    return entries.sort(function(a,b){ return b[1]-a[1]; }).slice(0, n);
+    const data = await supaFetch('stats?order=count.desc&limit=' + (n||10));
+    return (data||[]).map(function(r){ return [r.name, r.count]; });
   } catch(e) { return []; }
 };
 
-// Sauvegarder un garage dans Firestore
-window.saveGarageToFirebase = async function(name, carriers) {
+// Compteur total
+window.incTotalSearchCount = async function() {
   try {
-    const safeName = name.replace(/[^a-zA-Z0-9]/g, '_');
-    await setDoc(doc(db, 'garages', safeName), { name: name, carriers: JSON.stringify(carriers) });
-  } catch(e) { console.log('Firebase error:', e); }
+    await fetch(SUPA_URL + '/rest/v1/rpc/increment_total', {
+      method: 'POST',
+      headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json'},
+      body: '{}'
+    });
+  } catch(e) {}
 };
 
-// Supprimer un garage de Firestore
-window.deleteGarageFromFirebase = async function(name) {
+window.getTotalSearchCount = async function() {
   try {
-    const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
-    const safeName = name.replace(/[^a-zA-Z0-9]/g, '_');
-    await deleteDoc(doc(db, 'garages', safeName));
-  } catch(e) { console.log('Firebase error:', e); }
+    const data = await supaFetch('meta?name=eq.total_searches');
+    return (data && data[0]) ? data[0].value : 0;
+  } catch(e) { return 0; }
 };
 
-// Charger les garages ajoutés depuis Firebase au démarrage
-window.loadGaragesFromFirebase = async function() {
+// Garages admin
+window.saveGarageToSupabase = async function(name, carriers) {
   try {
-    const snap = await getDocs(collection(db, 'garages'));
-    snap.forEach(function(d) {
-      const data = d.data();
-      const carriers = JSON.parse(data.carriers);
-      const exists = window.GARAGES_DATA_REF && window.GARAGES_DATA_REF.find(function(g){ return g.g === data.name; });
+    await supaFetch('garages?on_conflict=name', 'POST', {name: name, carriers: JSON.stringify(carriers)});
+  } catch(e) { console.log('Supabase error:', e); }
+};
+
+window.deleteGarageFromSupabase = async function(name) {
+  try {
+    await supaFetch('garages?name=eq.' + encodeURIComponent(name), 'DELETE');
+  } catch(e) { console.log('Supabase error:', e); }
+};
+
+window.loadGaragesFromSupabase = async function() {
+  try {
+    const data = await supaFetch('garages?select=name,carriers');
+    if(!data || !data.length) return;
+    data.forEach(function(row) {
+      const carriers = JSON.parse(row.carriers);
+      const exists = window.GARAGES_DATA_REF && window.GARAGES_DATA_REF.find(function(g){ return g.g === row.name; });
       if(!exists && window.GARAGES_DATA_REF) {
-        window.GARAGES_DATA_REF.push({g: data.name, carriers: carriers});
-        window.GARAGES_DATA_REF.sort(function(a,b){ return a.g.localeCompare(b.g); });
+        window.GARAGES_DATA_REF.push({g: row.name, carriers: carriers});
+      } else if(exists && window.GARAGES_DATA_REF) {
+        // Mettre à jour si modifié
+        exists.carriers = carriers;
       }
     });
+    if(window.GARAGES_DATA_REF) window.GARAGES_DATA_REF.sort(function(a,b){ return a.g.localeCompare(b.g); });
     if(window.renderCarriers) window.renderCarriers();
     if(window.renderTop) window.renderTop();
-  } catch(e) { console.log('Firebase error:', e); }
+  } catch(e) { console.log('Supabase error:', e); }
 };
 </script>
 
@@ -1338,6 +1364,15 @@ function getStats(){ try{ return JSON.parse(localStorage.getItem('gs_v4') || '{}
 function incStat(n){ 
   const s=getStats(); s[n]=(s[n]||0)+1; localStorage.setItem('gs_v4', JSON.stringify(s));
   if(window.incStatShared) window.incStatShared(n);
+  if(window.incTotalSearchCount) window.incTotalSearchCount();
+  updateTotalCount();
+}
+
+async function updateTotalCount(){
+  if(!window.getTotalSearchCount) return;
+  const total = await window.getTotalSearchCount();
+  const el = document.getElementById('totalSearchCount');
+  if(el) el.textContent = total.toLocaleString('fr-FR');
 }
 function getTop(n){ n=n||10; return Object.entries(getStats()).sort(function(a,b){return b[1]-a[1];}).slice(0,n); }
 
@@ -1702,7 +1737,7 @@ function adminAddGarage(){
   GARAGES_DATA.sort(function(a,b){ return a.g.localeCompare(b.g); });
 
   // Save to Firebase
-  if(window.saveGarageToFirebase) window.saveGarageToFirebase(name, carriers);
+  if(window.saveGarageToSupabase) window.saveGarageToSupabase(name, carriers);
 
   msg.textContent = '✓ ' + name + ' ajouté avec succès !';
   msg.className = 'admin-msg ok';
@@ -1723,7 +1758,7 @@ function adminDeleteGarage(name){
   if(!confirm('Supprimer "' + name + '" ?')) return;
   const idx = GARAGES_DATA.findIndex(function(g){ return g.g === name; });
   if(idx !== -1) GARAGES_DATA.splice(idx, 1);
-  if(window.deleteGarageFromFirebase) window.deleteGarageFromFirebase(name);
+  if(window.deleteGarageFromSupabase) window.deleteGarageFromSupabase(name);
   renderAdminList();
   renderCarriers();
 }
@@ -1801,7 +1836,7 @@ function adminSaveEdit(){
   const idx = GARAGES_DATA.findIndex(function(g){ return g.g === currentEditName; });
   if(idx !== -1) GARAGES_DATA[idx].carriers = carriers;
 
-  if(window.saveGarageToFirebase) window.saveGarageToFirebase(currentEditName, carriers);
+  if(window.saveGarageToSupabase) window.saveGarageToSupabase(currentEditName, carriers);
 
   msg.textContent = '✓ ' + currentEditName + ' modifié !';
   msg.className = 'admin-msg ok';

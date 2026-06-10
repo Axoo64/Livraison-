@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Départs Livraison</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  --bg: #0e0c0c;
+  --surface: #1a1616;
+  --surface2: #221e1e;
+  --border: #332a2a;
+  --accent: #e84040;
+  --red: #e84040;
+  --orange: #f59020;
+  --green: #40d490;
+  --blue: #4090f5;
+  --purple: #a060f5;
+  --text: #f2eeee;
+  --muted: #7a6868;
+  --muted2: #4a3838;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { font-size:16px; }
+body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; }
+
+/* ── IMMINENT BANNER ── */
+.imminent-banner {
+  display: none;
+  text-align: center;
+  padding: 9px 16px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: var(--surface2);
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  transition: background .3s, color .3s;
+}
+.imminent-banner.show { display: block; }
+.imminent-banner.urgent {
+  background: var(--red);
+  color: #fff;
+  animation: flashBanner 1s infinite;
+}
+@keyframes flashBanner { 0%,100%{background:var(--red)} 50%{background:#a02020} }
+
+/* ── HERO ── */
+.hero {
+  background: #0a0808;
+  padding: 24px 20px 20px;
+  border-bottom: 2px solid var(--red);
+  position: relative;
+}
+
+/* Heure en haut à droite, bien contrastée */
+.hero-clock {
+  position: absolute;
+  top: 18px; right: 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 22px;
+  color: var(--accent);
+  letter-spacing: 2px;
+  font-weight: 500;
+}
+
+.hero-label {
+  font-family:'DM Mono',monospace; font-size:9px;
+  letter-spacing:4px; text-transform:uppercase;
+  color: var(--muted); margin-bottom:4px;
+}
+
+/* NOM DU TRANSPORTEUR — star de la page */
+.hero-name {
+  font-family:'Bebas Neue',sans-serif;
+  font-size: clamp(64px, 16vw, 120px);
+  line-height: 0.9;
+  letter-spacing: 4px;
+  color: #ffffff;
+  transition: color .3s;
+}
+.hero-name.imminent {
+  color: #ffffff;
+}
+@keyframes flashName { 0%,100%{opacity:1} 50%{opacity:.7} }
+
+.hero-bottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hero-departure {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.hero-time {
+  font-family:'Bebas Neue',sans-serif;
+  font-size: clamp(32px, 7vw, 52px);
+  letter-spacing: 3px;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.hero-countdown {
+  font-family:'Bebas Neue',sans-serif;
+  font-size: clamp(24px, 5vw, 38px);
+  letter-spacing: 2px;
+  color: var(--red);
+  line-height: 1;
+}
+.hero-countdown.imminent {
+  color: var(--red);
+  font-size: clamp(28px, 6vw, 44px);
+}
+
+.hero-next-label {
+  font-family:'DM Mono',monospace; font-size:9px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:var(--muted); align-self:flex-end; margin-bottom:4px;
+}
+
+/* ── TIMELINE ── */
+.timeline-wrap {
+  padding: 20px 20px 0;
+  max-width:1140px; margin:0 auto;
+}
+.section-label {
+  font-family:'DM Mono',monospace; font-size:9px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:var(--muted); margin-bottom:10px;
+  display:flex; align-items:center; gap:8px;
+}
+.section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+.timeline-container {
+  position: relative;
+  height: 64px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: visible;
+  margin-bottom: 4px;
+}
+
+/* Route parcourue */
+.timeline-road {
+  position: absolute;
+  top: 50%; transform: translateY(-50%);
+  left: 0; right: 0; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+}
+.timeline-progress {
+  position: absolute;
+  top: 0; left: 0; height: 100%;
+  background: linear-gradient(90deg, var(--muted2), var(--accent));
+  border-radius: 2px;
+  transition: width 1s linear;
+}
+
+/* Camion 🚚 */
+.timeline-truck {
+  position: absolute;
+  top: 50%; transform: translate(-50%, -50%);
+  font-size: 22px;
+  z-index: 10;
+  transition: left 1s linear;
+  filter: drop-shadow(0 0 8px rgba(212,240,74,0.6));
+}
+
+/* Points de départ */
+.timeline-point {
+  position: absolute;
+  top: 50%; transform: translate(-50%, -50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.timeline-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--bg);
+}
+.timeline-dot.past { background: var(--muted2); }
+.timeline-dot.next { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+.timeline-dot.future { background: var(--border); }
+
+.timeline-time {
+  font-family:'Bebas Neue',sans-serif;
+  font-size: 13px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  color: var(--muted);
+  /* Tooltip */
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 2px 7px;
+  border-radius: 3px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s;
+  z-index: 20;
+}
+.timeline-time.past { color: var(--muted2); }
+.timeline-time.next { color: var(--accent); }
+.timeline-point:hover .timeline-time,
+.timeline-point.tapped .timeline-time { opacity: 1; }
+
+/* ── SEARCH ── */
+.search-wrap { padding:16px 20px 8px; max-width:1140px; margin:0 auto; }
+.search-box {
+  display:flex; align-items:center; gap:10px;
+  background:var(--surface); border:2px solid var(--border);
+  border-radius:4px; padding:0 14px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.search-box:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(212,240,74,0.1);
+}
+.search-icon { font-size:16px; color:var(--muted); flex-shrink:0; }
+#searchInput {
+  flex:1; border:none; outline:none; background:transparent;
+  font-family:'DM Sans',sans-serif; font-size:17px; font-weight:500;
+  color:var(--text); padding:14px 0;
+}
+#searchInput::placeholder { color:var(--muted); font-weight:400; }
+.search-clear {
+  background:var(--red); border:none; cursor:pointer;
+  color:white; font-size:11px; padding:5px 10px;
+  border-radius:2px; display:none; font-weight:600;
+  font-family:'DM Mono',monospace; letter-spacing:1px;
+  transition: background .15s;
+}
+.search-clear:hover { background:#c03030; }
+
+#searchResults {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:4px; margin-top:6px; overflow:hidden; display:none;
+}
+.result-item {
+  padding:14px 18px; border-bottom:1px solid var(--border);
+  transition:background .1s; cursor:pointer;
+}
+.result-item:last-child { border-bottom:none; }
+.result-item:hover { background:var(--surface2); }
+.result-garage {
+  font-weight:600; font-size:16px; margin-bottom:8px;
+  color: var(--text);
+}
+
+/* Prochain départ dans la fiche */
+.result-next {
+  display:flex; align-items:center; gap:12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius:3px; padding:10px 14px; margin-bottom:8px;
+}
+.result-next-label {
+  font-family:'DM Mono',monospace; font-size:9px;
+  letter-spacing:2px; color:var(--muted); text-transform:uppercase;
+}
+.result-next-time {
+  font-family:'Bebas Neue',sans-serif; font-size:34px;
+  letter-spacing:2px; color:var(--accent); line-height:1;
+}
+.result-next-who {
+  font-family:'DM Mono',monospace; font-size:11px; color:var(--muted);
+  margin-top:2px;
+}
+.result-next-countdown {
+  margin-left:auto;
+  font-family:'Bebas Neue',sans-serif; font-size:30px;
+  letter-spacing:1px; color:var(--orange); line-height:1;
+}
+.result-next-countdown.urgent { color:var(--red); animation:flashName 1s infinite; }
+.result-next-countdown.verysoon { color:var(--orange); }
+
+.result-carriers { display:flex; flex-direction:column; gap:5px; }
+.result-carrier-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+.carrier-pill {
+  display:inline-flex; align-items:center;
+  font-family:'DM Mono',monospace; font-size:10px; font-weight:500;
+  padding:3px 9px; border-radius:2px; letter-spacing:.5px;
+}
+.pill-serge    { background:#3d1a18; color:#f07060; border:1px solid #5a2820; }
+.pill-lande    { background:#18263d; color:#6090f0; border:1px solid #20386a; }
+.pill-pb       { background:#18301f; color:#50d080; border:1px solid #205030; }
+.pill-bearn    { background:#3d2c10; color:#d09040; border:1px solid #5a4020; }
+.pill-hendaye  { background:#2c1a3d; color:#9060e0; border:1px solid #40286a; }
+.pill-ace      { background:#2a2a2a; color:#c0c0c0; border:1px solid #444; }
+
+.dep-times { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); }
+.dep-status { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.5px; }
+.dep-status.s-soon { color:var(--orange); font-weight:600; }
+.dep-status.s-urgent { color:var(--red); font-weight:600; animation:flashName 1s infinite; }
+.dep-status.s-past { color:var(--muted2); }
+.dep-status.s-upcoming { color:var(--blue); }
+
+.no-result { padding:18px; color:var(--muted); font-style:italic; text-align:center; }
+
+/* ── TOP ── */
+.top-section { padding:8px 20px 16px; max-width:1140px; margin:0 auto; }
+#topGarages { display:flex; flex-wrap:wrap; gap:6px; }
+.top-chip {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:3px; padding:5px 11px; font-size:12px; font-weight:500;
+  cursor:pointer; transition:all .12s; display:flex; align-items:center; gap:5px;
+  color: var(--text);
+}
+.top-chip:hover { border-color:var(--accent); color:var(--accent); }
+.top-chip .chip-count {
+  background:var(--surface2); color:var(--muted);
+  border-radius:2px; font-family:'DM Mono',monospace;
+  font-size:9px; padding:1px 5px;
+}
+.top-chip.urgent {
+  border-color:var(--orange); color:var(--orange);
+  animation: urgentChip 1.5s infinite;
+}
+@keyframes urgentChip { 0%,100%{box-shadow:0 0 0 0 rgba(245,144,32,0)} 50%{box-shadow:0 0 8px 2px rgba(245,144,32,0.3)} }
+
+/* ── TRANSPORTEURS (liste horizontale) ── */
+.carriers-section { padding:0 20px 40px; max-width:1140px; margin:0 auto; }
+.carriers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.carrier-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  transition: background .15s;
+  position: relative;
+}
+.carrier-row:last-child { border-bottom: none; }
+.carrier-row::before {
+  content:'';
+  position:absolute; left:0; top:0; bottom:0; width:3px;
+  background: transparent;
+  transition: background .3s;
+}
+.carrier-row.c-active::before { background: transparent; }
+.carrier-row.c-done { opacity:.4; }
+@keyframes flashBar { 0%,100%{opacity:1} 50%{opacity:.3} }
+@keyframes flashRed { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+
+.carrier-row-name {
+  font-weight: 600;
+  font-size: 14px;
+  min-width: 160px;
+  flex-shrink: 0;
+}
+.carrier-row.c-active .carrier-row-name { color: var(--text); }
+.carrier-row.c-soon .carrier-row-name { color: var(--text); }
+.carrier-row.c-imminent .carrier-row-name { color: var(--text); }
+
+.carrier-row-deps {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+.dep-pill {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 1px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--surface2);
+  transition: all .3s;
+}
+.dep-pill.dep-past    { color: var(--muted2); border-color: transparent; background: transparent; text-decoration: line-through; }
+.dep-pill.dep-future  { color: var(--muted);  border-color: var(--border); background: var(--surface2); }
+.dep-pill.dep-THE-ONE { 
+  color: #fff !important; 
+  border-color: var(--red) !important; 
+  background: var(--red) !important; 
+  font-weight: 700;
+  animation: flashRedBg .8s infinite;
+}
+@keyframes flashRedBg { 
+  0%,100%{ background: var(--red); color: #fff; border-color: var(--red); } 
+  50%{ background: transparent; color: var(--red); border-color: var(--red); } 
+}
+
+.carrier-row-status {
+  font-family:'DM Mono',monospace; font-size:10px;
+  color:var(--muted); letter-spacing:.5px; min-width:120px; text-align:right;
+  flex-shrink: 0;
+}
+.carrier-row.c-active .carrier-row-status { color: var(--green); }
+.carrier-row.c-soon .carrier-row-status { color: var(--orange); }
+.carrier-row.c-imminent .carrier-row-status { color: var(--red); }
+
+.carrier-row-count {
+  font-family:'DM Mono',monospace; font-size:11px;
+  color: var(--muted); min-width: 70px; text-align:right; flex-shrink:0;
+  letter-spacing: .5px;
+}
+.carrier-row-next {
+  flex: 1;
+}
+.next-dep-time {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+.next-dep-time.dep-next     { color: var(--accent); }
+.next-dep-time.dep-soon     { color: var(--orange); animation: flashBar 1s infinite; }
+.next-dep-time.dep-imminent { color: var(--red);    animation: flashBar .7s infinite; }
+.next-dep-time.dep-done     { color: var(--muted2); font-size: 16px; }
+
+/* Accordion */
+.carrier-row {
+  cursor: pointer;
+  user-select: none;
+}
+.carrier-row-chevron {
+  font-size: 11px;
+  color: var(--muted);
+  transition: transform .25s;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+.carrier-row.open .carrier-row-chevron { transform: rotate(180deg); }
+
+.carrier-garages-panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .3s ease;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.carrier-garages-panel.open {
+  max-height: 600px;
+}
+.carrier-garages-inner {
+  padding: 10px 18px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.garage-name-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 3px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.garage-name-tag:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.garage-name-tag.imminent {
+  color: var(--red);
+  border-color: rgba(232,64,64,0.4);
+  background: var(--surface);
+  font-weight: 600;
+}
+.garage-name-tag.soon {
+  color: var(--orange);
+  border-color: rgba(245,144,32,0.4);
+  background: var(--surface);
+  font-weight: 600;
+}
+
+/* ── TOAST ── */
+.toast {
+  position:fixed; bottom:20px; right:16px;
+  background:var(--surface); color:var(--text);
+  border:1px solid var(--border);
+  border-left:4px solid var(--orange);
+  border-radius:4px; padding:12px 16px;
+  font-family:'DM Sans',sans-serif; font-size:13px;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);
+  z-index:1000; max-width:280px;
+  transform:translateX(120%); transition:transform .3s;
+}
+.toast.show { transform:translateX(0); }
+.toast.urgent { border-left-color:var(--red); }
+.toast-title { font-weight:600; font-size:14px; margin-bottom:3px; }
+.toast-body { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:.5px; }
+
+@media(max-width:600px){
+  .carrier-row-status { display:none; }
+  .carrier-row-name { min-width:110px; font-size:13px; }
+  .carrier-row-count { min-width:50px; font-size:10px; }
+  .hero-clock { font-size:16px; }
+}
+
+/* ── ADMIN PANEL ── */
+.admin-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 500;
+  overflow-y: auto;
+  padding: 20px;
+}
+.admin-overlay.show { display: block; }
+.admin-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 24px;
+}
+.admin-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 3px;
+  color: var(--accent);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.admin-close {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 3px;
+  font-size: 16px;
+}
+.admin-close:hover { border-color: var(--red); color: var(--red); }
+
+.admin-section-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 20px 0 10px;
+}
+.admin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.admin-field label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.admin-field input, .admin-field select {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  outline: none;
+  width: 100%;
+}
+.admin-field input:focus, .admin-field select:focus {
+  border-color: var(--accent);
+}
+.admin-carriers-check {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.admin-carrier-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 8px 12px;
+}
+.admin-carrier-row input[type=checkbox] {
+  width: 16px; height: 16px;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+.admin-carrier-label {
+  font-size: 13px;
+  font-weight: 500;
+  flex: 1;
+}
+.admin-carrier-deps {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 4px 8px;
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  width: 160px;
+  outline: none;
+}
+.admin-carrier-deps:focus { border-color: var(--accent); }
+.admin-carrier-deps:disabled { opacity: 0.3; }
+
+.admin-btn {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 3px;
+  padding: 12px 20px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 16px;
+  transition: opacity .15s;
+}
+.admin-btn:hover { opacity: .85; }
+.admin-btn.danger { background: var(--red); color: #fff; }
+
+.admin-garage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 8px;
+}
+.admin-garage-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+.admin-garage-item button {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+}
+.admin-garage-item button:hover { border-color: var(--red); color: var(--red); }
+.admin-garage-item .btn-edit { margin-right: 4px; }
+.admin-garage-item .btn-edit:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Edit modal */
+.admin-edit-modal {
+  display: none;
+  background: var(--surface2);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 16px;
+  margin-top: 8px;
+}
+.admin-edit-modal.show { display: block; }
+
+.admin-search {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 8px 12px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  outline: none;
+  width: 100%;
+  margin-bottom: 8px;
+}
+.admin-search:focus { border-color: var(--accent); }
+
+.admin-msg {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  padding: 8px 12px;
+  border-radius: 3px;
+  margin-top: 8px;
+  display: none;
+}
+.admin-msg.ok { background: rgba(64,212,144,0.1); color: var(--green); border: 1px solid var(--green); display: block; }
+.admin-msg.err { background: rgba(232,64,64,0.1); color: var(--red); border: 1px solid var(--red); display: block; }
+
+/* Login */
+.admin-login {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.admin-login input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 12px;
+  color: var(--text);
+  font-size: 16px;
+  outline: none;
+  text-align: center;
+  letter-spacing: 3px;
+}
+.admin-login input:focus { border-color: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast">
+  <div class="toast-title" id="toastTitle"></div>
+  <div class="toast-body" id="toastBody"></div>
+</div>
+
+<div class="imminent-banner" id="imminentBanner"></div>
+
+<div class="hero">
+  <div class="hero-clock" id="heroClock">--:--:--</div>
+  <div class="hero-label">Prochain départ</div>
+  <div class="hero-name" id="heroName">—</div>
+  <div class="hero-bottom">
+    <div class="hero-departure">
+      <div class="hero-time" id="heroTime">—</div>
+      <div class="hero-countdown" id="heroCountdown"></div>
+    </div>
+    <div class="hero-next-label" id="heroSub"></div>
+  </div>
+</div>
+
+<div class="timeline-wrap">
+  <div class="section-label">Journée en cours</div>
+  <div class="timeline-container" id="timelineContainer">
+    <div class="timeline-road">
+      <div class="timeline-progress" id="timelineProgress"></div>
+    </div>
+    <div class="timeline-truck" id="timelineTruck">🚚</div>
+    <div id="timelinePoints"></div>
+  </div>
+</div>
+
+<div class="search-wrap">
+  <div class="search-box">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Rechercher un garage..." autocomplete="off" autocorrect="off" spellcheck="false">
+    <button class="search-clear" id="searchClear">✕ EFFACER</button>
+  </div>
+  <div id="searchResults"></div>
+</div>
+
+<div style="text-align:center;padding:4px 20px 0;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px">
+  🔍 <span id="totalSearchCount">—</span> recherches effectuées
+</div>
+
+<div class="top-section">
+  <div class="section-label">Les plus recherchés</div>
+  <div id="topGarages"><em style="color:var(--muted);font-size:12px">Les garages les plus recherchés apparaîtront ici automatiquement...</em></div>
+</div>
+
+<div class="carriers-section">
+  <div class="section-label">Transporteurs</div>
+  <div class="carriers-list" id="carriersList"></div>
+</div>
+
+<div style="text-align:center;padding:16px 0 32px">
+  <span id="adminTrigger" style="font-size:18px;color:var(--muted);cursor:pointer;user-select:none;opacity:0.4;transition:opacity .2s" title="">🔒</span>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="admin-overlay" id="adminOverlay">
+  <div class="admin-box">
+    <!-- LOGIN -->
+    <div id="adminLogin">
+      <div class="admin-title">ADMIN 🔐</div>
+      <div class="admin-login">
+        <input type="password" id="adminPwd" placeholder="Mot de passe..." onkeydown="if(event.key==='Enter') checkAdminPwd()">
+        <button class="admin-btn" onclick="checkAdminPwd()">ACCÉDER</button>
+        <div class="admin-msg" id="adminLoginMsg"></div>
+      </div>
+    </div>
+
+    <!-- PANEL -->
+    <div id="adminPanel" style="display:none">
+      <div class="admin-title">
+        ADMIN
+        <button class="admin-close" onclick="closeAdmin()">✕ FERMER</button>
+      </div>
+
+      <!-- AJOUTER UN GARAGE -->
+      <div class="admin-section-title">Ajouter un garage</div>
+      <div class="admin-field">
+        <label>Nom du garage</label>
+        <input type="text" id="adminGarageName" placeholder="Ex: Garage Dupont">
+      </div>
+      <div class="admin-field">
+        <label>Transporteurs & horaires de départ (séparer par virgule ex: 09h30,15h30)</label>
+        <div class="admin-carriers-check" id="adminCarriersCheck">
+          <div class="admin-carrier-row">
+            <input type="checkbox" id="chk-serge">
+            <label class="admin-carrier-label" for="chk-serge">Serge</label>
+            <input class="admin-carrier-deps" id="deps-serge" placeholder="09h30,15h30" disabled>
+          </div>
+          <div class="admin-carrier-row">
+            <input type="checkbox" id="chk-lande">
+            <label class="admin-carrier-label" for="chk-lande">Packeto Lande</label>
+            <input class="admin-carrier-deps" id="deps-lande" placeholder="06h00,10h45" disabled>
+          </div>
+          <div class="admin-carrier-row">
+            <input type="checkbox" id="chk-pb">
+            <label class="admin-carrier-label" for="chk-pb">Packeto Pays Basque</label>
+            <input class="admin-carrier-deps" id="deps-pb" placeholder="11h15,16h15" disabled>
+          </div>
+          <div class="admin-carrier-row">
+            <input type="checkbox" id="chk-bearn">
+            <label class="admin-carrier-label" for="chk-bearn">Packeto Béarn</label>
+            <input class="admin-carrier-deps" id="deps-bearn" placeholder="11h00,15h30" disabled>
+          </div>
+          <div class="admin-carrier-row">
+            <input type="checkbox" id="chk-hendaye">
+            <label class="admin-carrier-label" for="chk-hendaye">Packeto Hendaye</label>
+            <input class="admin-carrier-deps" id="deps-hendaye" placeholder="09h15,14h15" disabled>
+          </div>
+          <div class="admin-carrier-row">
+            <input type="checkbox" id="chk-ace">
+            <label class="admin-carrier-label" for="chk-ace">ACE Hendaye</label>
+            <input class="admin-carrier-deps" id="deps-ace" placeholder="07h00,11h30" disabled>
+          </div>
+        </div>
+      </div>
+      <button class="admin-btn" onclick="adminAddGarage()">AJOUTER LE GARAGE</button>
+      <div class="admin-msg" id="adminAddMsg"></div>
+
+      <!-- SUPPRIMER UN GARAGE -->
+      <div class="admin-section-title" style="margin-top:28px">Supprimer un garage</div>
+      <input class="admin-search" id="adminDeleteSearch" placeholder="Rechercher un garage..." oninput="renderAdminList()">
+      <div class="admin-garage-list" id="adminGarageList"></div>
+
+      <!-- EDIT MODAL -->
+      <div class="admin-edit-modal" id="adminEditModal">
+        <div class="admin-section-title" style="margin-top:0">Modifier le garage : <span id="editGarageName" style="color:var(--accent)"></span></div>
+        <div class="admin-carriers-check" id="editCarriersCheck">
+          <div class="admin-carrier-row">
+            <input type="checkbox" id="echk-serge">
+            <label class="admin-carrier-label" for="echk-serge">Serge</label>
+            <input class="admin-carrier-deps" id="edeps-serge" placeholder="09h30,15h30" disabled>
+          </div>
+          <div class="admin-carrier-row">
+            <input type="checkbox" id="echk-lande">
+            <label class="admin-carrier-label" for="echk-lande">Packeto Lande</label>
+            <input class="admin-carrier-deps" id="edeps-lande" placeholder="06h00,10h45" disabled>
+          </div>
+          <div class="admin-carrier-row">
+            <input type="checkbox" id="echk-pb">
+            <label class="admin-carrier-label" for="echk-pb">Packeto Pays Basque</label>
+            <input class="admin-carrier-deps" id="edeps-pb" placeholder="11h15,16h15" disabled>
+          </div>
+          <div class="admin-carrier-row">
+            <input type="checkbox" id="echk-bearn">
+            <label class="admin-carrier-label" for="echk-bearn">Packeto Béarn</label>
+            <input class="admin-carrier-deps" id="edeps-bearn" placeholder="11h00,15h30" disabled>
+          </div>
+          <div class="admin-carrier-row">
+            <input type="checkbox" id="echk-hendaye">
+            <label class="admin-carrier-label" for="echk-hendaye">Packeto Hendaye</label>
+            <input class="admin-carrier-deps" id="edeps-hendaye" placeholder="09h15,14h15" disabled>
+          </div>
+          <div class="admin-carrier-row">
+            <input type="checkbox" id="echk-ace">
+            <label class="admin-carrier-label" for="echk-ace">ACE Hendaye</label>
+            <input class="admin-carrier-deps" id="edeps-ace" placeholder="07h00,11h30" disabled>
+          </div>
+        </div>
+        <button class="admin-btn" onclick="adminSaveEdit()" style="margin-top:12px">ENREGISTRER</button>
+        <button class="admin-btn danger" onclick="document.getElementById('adminEditModal').classList.remove('show')" style="margin-top:6px">ANNULER</button>
+        <div class="admin-msg" id="adminEditMsg"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── SUPABASE ──────────────────────────────────────────────────────────────────
+const SUPA_URL = 'https://aitbhskkwoqmoqfpogph.supabase.co';
+const SUPA_KEY = 'sb_publishable_84rSs3LwBpdWs4qbPd5zkA_dOh-ci4s';
+
+async function supaFetch(path, method, body) {
+  const opts = {
+    method: method || 'GET',
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'resolution=merge-duplicates' : ''
+    }
+  };
+  if(body) opts.body = JSON.stringify(body);
+  const res = await fetch(SUPA_URL + '/rest/v1/' + path, opts);
+  if(res.status === 204) return null;
+  return res.json();
+}
+
+// Stats partagées
+window.incStatShared = async function(name) {
+  try {
+    await supaFetch('stats?on_conflict=name', 'POST', {name: name, count: 1});
+    // Upsert via RPC pour incrémenter
+    await fetch(SUPA_URL + '/rest/v1/rpc/increment_stat', {
+      method: 'POST',
+      headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json'},
+      body: JSON.stringify({garage_name: name})
+    });
+  } catch(e) {}
+};
+
+window.getTopShared = async function(n) {
+  try {
+    const data = await supaFetch('stats?order=count.desc&limit=' + (n||10));
+    return (data||[]).map(function(r){ return [r.name, r.count]; });
+  } catch(e) { return []; }
+};
+
+// Compteur total
+window.incTotalSearchCount = async function() {
+  try {
+    await fetch(SUPA_URL + '/rest/v1/rpc/increment_total', {
+      method: 'POST',
+      headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json'},
+      body: '{}'
+    });
+  } catch(e) {}
+};
+
+window.getTotalSearchCount = async function() {
+  try {
+    const data = await supaFetch('meta?name=eq.total_searches');
+    return (data && data[0]) ? data[0].value : 0;
+  } catch(e) { return 0; }
+};
+
+// Garages admin
+window.saveGarageToSupabase = async function(name, carriers) {
+  try {
+    await supaFetch('garages?on_conflict=name', 'POST', {name: name, carriers: JSON.stringify(carriers)});
+  } catch(e) { console.log('Supabase error:', e); }
+};
+
+window.deleteGarageFromSupabase = async function(name) {
+  try {
+    await supaFetch('garages?name=eq.' + encodeURIComponent(name), 'DELETE');
+  } catch(e) { console.log('Supabase error:', e); }
+};
+
+window.loadGaragesFromSupabase = async function() {
+  try {
+    const data = await supaFetch('garages?select=name,carriers');
+    if(!data || !data.length) return;
+    data.forEach(function(row) {
+      const carriers = JSON.parse(row.carriers);
+      const exists = window.GARAGES_DATA_REF && window.GARAGES_DATA_REF.find(function(g){ return g.g === row.name; });
+      if(!exists && window.GARAGES_DATA_REF) {
+        window.GARAGES_DATA_REF.push({g: row.name, carriers: carriers});
+      } else if(exists && window.GARAGES_DATA_REF) {
+        // Mettre à jour si modifié
+        exists.carriers = carriers;
+      }
+    });
+    if(window.GARAGES_DATA_REF) window.GARAGES_DATA_REF.sort(function(a,b){ return a.g.localeCompare(b.g); });
+    if(window.renderCarriers) window.renderCarriers();
+    if(window.renderTop) window.renderTop();
+  } catch(e) { console.log('Supabase error:', e); }
+};
+</script>
+
+<script>
+const CARRIERS = {
+  serge:   { label: 'Serge' },
+  lande:   { label: 'Packeto Lande' },
+  pb:      { label: 'Packeto Pays Basque' },
+  bearn:   { label: 'Packeto Béarn' },
+  hendaye: { label: 'Packeto Hendaye' },
+  ace:     { label: 'ACE Hendaye' },
+};
+
+const CARRIER_DEPS = {
+  serge:   ['09h30','15h30'],
+  lande:   ['06h00','10h45','11h00','15h30'],
+  pb:      ['11h15','16h15','18h00'],
+  bearn:   ['11h00','15h30'],
+  hendaye: ['09h15','14h15'],
+  ace:     ['07h00','11h30'],
+};
+
+const GARAGES_DATA = [
+  // ── A ──
+  { g: 'ABL Automobile',              carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Adour Occasion',              carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'AG Auto 64',                  carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Agri Oto',                    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Aguer',                       carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Aguerre André (Irissarry)',   carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Ahozteia',                    carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Alain EMP Parachou (Loubet)', carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Alfaro Mattin',               carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Alfaro Sébastien',            carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Ambulance Du Labourd',        carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Aquitaine Auto Béarn',        carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Arosteguy',                   carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Arrayet Garage',              carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Arrieta (Station Elan)',      carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'ASF',                         carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Astigarage',                  carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'At Jardin',                   carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Atelier Du Bourriaou',        carriers: [{id:'bearn',deps:['11h00','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Atelier Garcia',              carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Atlantic Auto',               carriers: [{id:'lande',deps:['10h45','15h30']}] },
+  { g: 'Augaray (Roady)',             carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Autaa Levage (Artix)',        carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Auto Loisir',                 carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Auto Casse Du Labourd',       carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Auto Libier',                 carriers: [{id:'hendaye',deps:['09h15','14h15']}] },
+  { g: 'Auto Méca Concept',           carriers: [{id:'lande',deps:['06h00','11h00','15h30']},{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Auto Sport',                  carriers: [] },
+  { g: 'Autolan',                     carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Autovision',                  carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  // ── B ──
+  { g: 'Barbe Et Fils',               carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
+  { g: 'Barnetche',                   carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Bénat Lahirigoyen',           carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Berho',                       carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Berrouet',                    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Bidegaimberry',               carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Bildozeko',                   carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Bittola',                     carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Bourriaou',                   carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Bug',                         carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  // ── C ──
+  { g: 'Canton',                      carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Capbreton Garage Service',    carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
+  { g: 'Carriquiry',                  carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Carrosserie Du 64',           carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Casse Auto Valade (EV)',      carriers: [{id:'lande',deps:['06h00']},{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Casse Auto Du Labourd',       carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Castera',                     carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Catelin',                     carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Cazauran',                    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Cebre Auto Bidassoa',         carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Chopin',                      carriers: [{id:'lande',deps:['06h00','10h45']}] },
+  { g: 'Clean And Co',                carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
+  { g: 'CN Auto',                     carriers: [{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Colet',                       carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Commune De Maremne',          carriers: [{id:'lande',deps:['11h00']}] },
+  { g: 'Commune De Salies',           carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Coreba',                      carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Creacar (Ayherré)',           carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Creacar (Hasparren)',         carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Crosa St Jean De Luz',        carriers: [{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Cruiser',                     carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
+  { g: 'Ctrl Technique Bonloc',       carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  // ── D ──
+  { g: 'Daguerre',                    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Dallard St Jean De Luz',      carriers: [{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Dallard St Paul Les Dax',     carriers: [{id:'lande',deps:['06h00','11h00']}] },
+  { g: 'Dartiguenave',                carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'DCI Event',                   carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Debussy',                     carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Dekra (Itxassou)',            carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Detcheverry',                 carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Div Bug',                     carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'DNL Auto',                    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Doucet',                      carriers: [{id:'lande',deps:['06h00','10h45']}] },
+  { g: 'Douhry',                      carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Drop Loc',                    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'DSM Auto',                    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'DTH',                         carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Duhalde',                     carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Duhau (St Palais)',           carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Durruty (GSD)',               carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'DV Auto',                     carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Dirasse',                    carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Landes Auto Remorques',      carriers: [{id:'lande',deps:['10h45','15h30']}] },
+  // ── E ──
+  { g: 'Eco Pneu',                    carriers: [{id:'lande',deps:['06h00','11h00']}] },
+  { g: 'Egis Exploitation',           carriers: [{id:'lande',deps:['06h00','11h00']}] },
+  { g: 'EMP Lapurdi',                 carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Errobi Garage',               carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Espace Auto Landais',         carriers: [{id:'lande',deps:['06h00']},{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Essenjy',                     carriers: [{id:'lande',deps:['06h00','11h00','15h30']}] },
+  { g: 'Etchegaray (Hasparren)',      carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Etchegaray (Larressore)',     carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Etchegaray Guy (Itxassu)',    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Etchegoimberry',              carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Etchegoïn',                   carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Etcheverry Garage',           carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'ETPM',                        carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Euromaster (St Palais)',      carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Europ Autosport',             carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'EV (Casse Auto Valade)',      carriers: [{id:'lande',deps:['06h00']},{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Evasion Marine',              carriers: [{id:'lande',deps:['10h45','15h30']}] },
+  { g: 'Eyheramouno',                 carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Ezpela',                      carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  // ── F ──
+  { g: 'Feu Vert Bidart',             carriers: [{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Feu Vert Dax',               carriers: [{id:'lande',deps:['06h00','11h00']}] },
+  { g: 'Feu Vert Hendaye',            carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Feu Vert St Jean',            carriers: [{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Fix Auto',                    carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Frantxoa Maitia',             carriers: [{id:'serge',deps:['09h30','15h30']}] },
+  // ── G ──
+  { g: 'Garage De La Gare',          carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Garage De La Zone',          carriers: [{id:'lande',deps:['06h00','10h45']}] },
+  { g: "Garage De L'Avenue Hossegor",carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
+  { g: 'Garage De Maremne',          carriers: [{id:'lande',deps:['06h00','11h00']}] },
+  { g: 'Garage Des Lacs',            carriers: [{id:'lande',deps:['06h00','11h00']}] },
+  { g: 'Garage Du Canton',           carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Garage Du Rond Point',       carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Garage Du Seignanx',         carriers: [{id:'lande',deps:['06h00']},{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Garage Errobi',              carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Garauto',                    carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
+  { g: 'Garazi DTH',                 carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Gardères',                   carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Gariador',                   carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Gauyat',                     carriers: [{id:'lande',deps:['06h00','11h00','15h30']}] },
+  { g: 'GD Pneu',                    carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'GDM',                        carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Gentil Service',             carriers: [{id:'lande',deps:['06h00','10h45']}] },
+  { g: 'Global Car',                 carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'GSD Gestion Sces Location',  carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  // ── H ──
+  { g: 'Happy Car',                  carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Harispe',                    carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Haristoy',                   carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Herrikoa',                   carriers: [{id:'hendaye',deps:['09h15','14h15']}] },
+  { g: 'Hirigoyen Louhossoa',        carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Hirigoyen Macaye',           carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Hiruak Bat',                 carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Hourdebaigt',                carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  // ── I ──
+  { g: 'Illumbe',                    carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Intxaurmendi',               carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Irachabal',                  carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Irey',                       carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Iribarren Patrick',          carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Ispeguy (Mocho)',            carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  // ── J ──
+  { g: 'Jaury',                      carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'JM Auto',                    carriers: [{id:'lande',deps:['06h00']},{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'John Deere',                 carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'JS Auto',                    carriers: [{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Julien Muguida',             carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  // ── K ──
+  { g: 'Kenzo',                      carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Koro',                       carriers: [{id:'lande',deps:['10h45','15h30']}] },
+  // ── L ──
+  { g: "L'Avenue Hossegor",          carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
+  { g: 'La Gare (Combo)',            carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Labaçhot (Escos)',           carriers: [{id:'pb',deps:['15h15','18h00']}] },
+  { g: 'Laminak Bus',                carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Lana',                       carriers: [{id:'lande',deps:['06h00','10h45','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Landoto',                    carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
+  { g: 'Lapurdi Garage',             carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Lascano',                    carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Lau Auto',                   carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Lavignasse',                 carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'LB Service 40',             carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Le Petit Garage',            carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Le Vieux Port (Chez Chopin)',carriers: [{id:'lande',deps:['06h00','10h45']}] },
+  { g: 'Leclerc Capbreton (Socadi)', carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
+  { g: 'Leclerc Hendaye',            carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Leclerc Soutons',            carriers: [{id:'lande',deps:['06h00','10h45']}] },
+  { g: 'Leclerc St Jean De Luz',     carriers: [{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Leclerc Tyrosse',            carriers: [{id:'lande',deps:['06h00','11h00','15h30']}] },
+  { g: 'Lerzy',                      carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Lissart Didier',             carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Lokaz Auto',                 carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Loubet',                     carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Lousteau',                   carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Lucu',                       carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Lycée Pro JP Champo',        carriers: [{id:'pb',deps:['11h15']}] },
+  // ── M ──
+  { g: 'Madalia Ocafrain',           carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Mainhaguiet',                carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Maitia Frantxoa',            carriers: [{id:'serge',deps:['09h30','15h30']}] },
+  { g: 'Many Loisir',                carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Marensin Chopin',            carriers: [{id:'lande',deps:['06h00','10h45']}] },
+  { g: 'Marinela',                   carriers: [{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Martinon',                   carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Mathieu EMP Lapurdi',        carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Maya Sport',                 carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Mecagri',                    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Mendiburu Frere-Horticulteur',carriers:[{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Mendikoharis (URT Auto)',    carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'MHSB',                       carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Miramon',                    carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'MJ Auto',                    carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'ML',                         carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Mocho (Ispeguy)',            carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Montolieu',                  carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Motoculture Du Bas Adour',   carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Muguida',                    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  // ── N ──
+  { g: 'Nafarroa',                   carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Naza',                       carriers: [{id:'lande',deps:['10h45','15h30']}] },
+  { g: 'NCS',                        carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Negobus',                    carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Néo Réseaux',                carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Neoglass',                   carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Noël Auto',                  carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'NR Motorsport',              carriers: [{id:'bearn',deps:['11h00']}] },
+  // ── O ──
+  { g: 'Ocafrain Madalia',           carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Olaizola',                   carriers: [{id:'pb',deps:['15h15','16h15']}] },
+  { g: 'Orthez Auto',                carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Oyhamburu',                  carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  // ── P ──
+  { g: 'Pat Auto',                   carriers: [{id:'serge',deps:['15h30']},{id:'pb',deps:['11h15']}] },
+  { g: 'Pedare (Ustaritz)',          carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Petit Garage',               carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Peyre Pare-Brise',           carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Pirone',                     carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
+  { g: 'Planuya',                    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Pochulu',                    carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Poulou Pascal',              carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Puissance D Garage',         carriers: [{id:'lande',deps:['06h00','11h00']}] },
+  { g: 'Pyrénées Auto',              carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  // ── R ──
+  { g: 'Raymond',                    carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Reflex Auto',                carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
+  { g: 'Relais Des Gaves',           carriers: [{id:'lande',deps:['06h00']},{id:'pb',deps:['11h00','15h30']},{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Roady (Augaray)',            carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Rond Point',                 carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'RV Garage',                  carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  // ── S ──
+  { g: 'Sabarots',                   carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Saffores',                   carriers: [] },
+  { g: 'Sakanette',                  carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Salles Et Dutrey',           carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
+  { g: 'Scavelli',                   carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Semerena',                   carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'SGM Auto',                   carriers: [{id:'lande',deps:['06h00','11h00']}] },
+  { g: 'Sobamat',                    carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Socadi (Leclerc Capbreton)', carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
+  { g: 'Sopite',                     carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Spvi Dax',                   carriers: [{id:'lande',deps:['06h00','11h00']}] },
+  { g: 'St Etienne Garage',          carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Station Elan Arrieta',       carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Station Service Du Port',    carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
+  { g: 'STPI',                       carriers: [{id:'hendaye',deps:['09h15','14h15']}] },
+  // ── T ──
+  { g: 'Thambo J-Pierre',            carriers: [{id:'pb',deps:['11h15','18h00']}] },
+  { g: 'Tilt Auto',                  carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'TMS',                        carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Toffolo',                    carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'Triumphe (Vintage Vadrouille)',carriers:[{id:'hendaye',deps:['09h15','14h15']}] },
+  { g: 'TS Auto',                    carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  // ── U ──
+  { g: 'Urtxintxa',                  carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  { g: 'URT Auto (Mendikoharis)',    carriers: [{id:'pb',deps:['11h15','16h15']}] },
+  // ── V ──
+  { g: 'Vallade (EV)',               carriers: [{id:'lande',deps:['06h00']},{id:'bearn',deps:['11h00','15h30']}] },
+  { g: 'Ville De Cambo',             carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15']}] },
+  { g: 'Ville Hendaye',              carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
+  { g: 'Ville Hossegor',             carriers: [{id:'lande',deps:['06h00','10h45']}] },
+  { g: 'Vintage Car Club',           carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
+  { g: 'Vintage Vadrouille (Triumphe)',carriers:[{id:'hendaye',deps:['09h15','14h15']}] },
+  // ── W ──
+  { g: 'World Of Part',              carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  // ── X ──
+  { g: 'Xabi Girard',                carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','15h30']}] },
+  { g: 'Xabi Meca',                  carriers: [{id:'bearn',deps:['11h00','15h30']}] },
+  // ── Z ──
+  { g: 'Zelaia',                     carriers: [{id:'pb',deps:['11h15','18h00']}] },
+];
+
+// Helpers
+function toMin(h,m){ return h*60+m; }
+function nowMin(){ const n=new Date(); return n.getHours()*60+n.getMinutes(); }
+function parseTime(s){ const parts=s.split('h'); return toMin(parseInt(parts[0]), parseInt(parts[1]||0)); }
+function fmt(min){ const h=Math.floor(min/60),m=min%60; return String(h).padStart(2,'0')+'h'+String(m).padStart(2,'0'); }
+function fmtCD(diff){
+  if(diff<=0) return 'EN COURS';
+  if(diff<60) return diff+' MIN';
+  return Math.floor(diff/60)+'h'+String(diff%60).padStart(2,'0');
+}
+function normalize(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+function getDeps(c){ return c.deps.map(parseTime); }
+function nextDep(c){ const now=nowMin(), d=getDeps(c).filter(t=>t>now); return d.length ? Math.min(...d) : null; }
+function carrierSt(c){
+  const now=nowMin(), deps=getDeps(c), up=deps.filter(t=>t>now);
+  if(!up.length) return {s:'past'};
+  const nxt=Math.min(...up), diff=nxt-now;
+  if(diff<=15) return {s:'imminent',next:nxt,diff};
+  if(diff<=30) return {s:'soon',next:nxt,diff};
+  return {s:'upcoming',next:nxt,diff};
+}
+
+// Notifications
+const notified = new Set();
+function showToast(title, body, urgent){
+  const el = document.getElementById('toast');
+  document.getElementById('toastTitle').textContent = title;
+  document.getElementById('toastBody').textContent = body;
+  el.className = 'toast' + (urgent ? ' urgent' : '') + ' show';
+  setTimeout(function(){ el.className = 'toast' + (urgent ? ' urgent' : ''); }, 6000);
+}
+function checkNotifs(){
+  const now = nowMin();
+  Object.keys(CARRIER_DEPS).forEach(function(cid){
+    CARRIER_DEPS[cid].forEach(function(d){
+      const t = parseTime(d), diff = t - now;
+      const k30 = cid+d+'30', k15 = cid+d+'15';
+      if(diff > 0 && diff <= 30 && !notified.has(k30)){
+        notified.add(k30);
+        showToast('⏰ Départ dans 30 min', CARRIERS[cid].label + ' — ' + d, false);
+        if(window.Notification && Notification.permission === 'granted')
+          new Notification('⏰ Départ dans 30 min', {body: CARRIERS[cid].label + ' part à ' + d});
+      }
+      if(diff > 0 && diff <= 15 && !notified.has(k15)){
+        notified.add(k15);
+        showToast('🚨 DÉPART IMMINENT', CARRIERS[cid].label + ' — ' + d + ' — ' + diff + ' MIN', true);
+        if(window.Notification && Notification.permission === 'granted')
+          new Notification('🚨 DÉPART IMMINENT', {body: CARRIERS[cid].label + ' dans ' + diff + ' min !'});
+      }
+    });
+  });
+}
+if(window.Notification && Notification.permission === 'default') Notification.requestPermission();
+
+// Stats
+function getStats(){ try{ return JSON.parse(localStorage.getItem('gs_v4') || '{}'); } catch(e){ return {}; } }
+function incStat(n){ 
+  const s=getStats(); s[n]=(s[n]||0)+1; localStorage.setItem('gs_v4', JSON.stringify(s));
+  if(window.incStatShared) window.incStatShared(n);
+  if(window.incTotalSearchCount) window.incTotalSearchCount();
+  updateTotalCount();
+}
+
+async function updateTotalCount(){
+  if(!window.getTotalSearchCount) return;
+  const total = await window.getTotalSearchCount();
+  const el = document.getElementById('totalSearchCount');
+  if(el) el.textContent = total.toLocaleString('fr-FR');
+}
+function getTop(n){ n=n||10; return Object.entries(getStats()).sort(function(a,b){return b[1]-a[1];}).slice(0,n); }
+
+// Charger les stats partagées depuis Firebase au démarrage
+async function loadSharedStats() {
+  if(!window.getTopShared) return;
+  const top = await window.getTopShared(50);
+  if(!top.length) return;
+  const s = getStats();
+  top.forEach(function(item){
+    const name = item[0], count = item[1];
+    // Prendre le max entre local et Firebase
+    s[name] = Math.max(s[name]||0, count);
+  });
+  localStorage.setItem('gs_v4', JSON.stringify(s));
+  renderTop();
+}
+
+// Search
+function buildResult(m){
+  const now = nowMin();
+  let bestNext = null, bestCid = null;
+  m.carriers.forEach(function(c){
+    const nd = nextDep(c);
+    if(nd !== null && (bestNext === null || nd < bestNext)){ bestNext = nd; bestCid = c.id; }
+  });
+  const diff = bestNext !== null ? bestNext - now : null;
+  const isUrgent = diff !== null && diff <= 15;
+  const isSoon = diff !== null && diff <= 30;
+
+  let nextBlock;
+  if(bestNext !== null){
+    nextBlock = '<div class="result-next">' +
+      '<div><div class="result-next-label">Prochain départ</div>' +
+      '<div class="result-next-time">' + fmt(bestNext) + '</div>' +
+      '<div class="result-next-who">' + CARRIERS[bestCid].label + '</div></div>' +
+      '<div class="result-next-countdown' + (isUrgent?' urgent':isSoon?' verysoon':'') + '">' + fmtCD(diff) + '</div>' +
+      '</div>';
+  } else {
+    nextBlock = '<div class="result-next"><span style="color:var(--muted);font-size:12px;font-family:DM Mono,monospace">Plus de départ aujourd\'hui</span></div>';
+  }
+
+  const rows = m.carriers.map(function(c){
+    const carr = CARRIERS[c.id]; if(!carr) return '';
+    const st = carrierSt(c);
+    let statusHtml = '';
+    if(st.s === 'imminent') statusHtml = '<span class="dep-status s-urgent">🚨 ' + st.diff + ' min</span>';
+    else if(st.s === 'soon') statusHtml = '<span class="dep-status s-soon">⚡ ' + st.diff + ' min</span>';
+    else if(st.s === 'past') statusHtml = '<span class="dep-status s-past">Terminé</span>';
+    else statusHtml = '<span class="dep-status s-upcoming">→ ' + fmt(st.next) + '</span>';
+    return '<div class="result-carrier-row">' +
+      '<span class="carrier-pill pill-' + c.id + '">' + carr.label + '</span>' +
+      '<span class="dep-times">✈ ' + c.deps.join(' · ') + '</span>' +
+      statusHtml + '</div>';
+  }).join('');
+
+  const safeName = m.g.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  return '<div class="result-item" onclick="onResultClick(\'' + safeName + '\')">' +
+    '<div class="result-garage">' + m.g + '</div>' +
+    nextBlock +
+    '<div class="result-carriers">' + rows + '</div></div>';
+}
+
+const searchInput = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+const searchClear = document.getElementById('searchClear');
+
+function doSearch(q){
+  const nq = normalize(q.trim());
+  if(!nq){ searchResults.style.display='none'; searchClear.style.display='none'; return; }
+  searchClear.style.display = 'block';
+  const matches = GARAGES_DATA.filter(function(g){ return normalize(g.g).includes(nq); });
+  searchResults.innerHTML = matches.length ? matches.map(buildResult).join('') : '<div class="no-result">Aucun garage trouvé</div>';
+  searchResults.style.display = 'block';
+}
+function onResultClick(n){ incStat(n); renderTop(); searchInput.value=n; doSearch(n); }
+function clearSearch(){ searchInput.value=''; searchResults.style.display='none'; searchClear.style.display='none'; searchInput.focus(); }
+searchInput.addEventListener('input', function(e){ doSearch(e.target.value); });
+
+// Timeline tap support for mobile
+document.getElementById('timelinePoints').addEventListener('click', function(e){
+  const point = e.target.closest('.timeline-point');
+  if(!point) return;
+  document.querySelectorAll('.timeline-point.tapped').forEach(function(p){ if(p!==point) p.classList.remove('tapped'); });
+  point.classList.toggle('tapped');
+});
+searchInput.addEventListener('keydown', function(e){ if(e.key==='Escape') clearSearch(); });
+document.getElementById('searchClear').addEventListener('click', clearSearch);
+
+// Top garages
+function renderTop(){
+  const top = getTop(10);
+  const el = document.getElementById('topGarages');
+  if(!top.length){
+    el.innerHTML = '<em style="color:var(--muted);font-size:12px">Les garages les plus recherchés apparaîtront ici automatiquement...</em>';
+    return;
+  }
+  const now = nowMin();
+  el.innerHTML = top.map(function(item){
+    const name = item[0], count = item[1];
+    const gd = GARAGES_DATA.find(function(g){ return g.g === name; });
+    const urgent = gd && gd.carriers.some(function(c){ const nd=nextDep(c); return nd!==null && nd-now<=30; });
+    const safeName = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return '<button class="top-chip' + (urgent?' urgent':'') + '" onclick="onChipClick(\'' + safeName + '\')">' +
+      name + '<span class="chip-count">' + count + '</span></button>';
+  }).join('');
+}
+function onChipClick(n){ searchInput.value=n; doSearch(n); incStat(n); renderTop(); searchInput.scrollIntoView({behavior:'smooth',block:'center'}); }
+
+// Hero
+function renderHero(){
+  const now = nowMin();
+  let best = null;
+  Object.keys(CARRIER_DEPS).forEach(function(cid){
+    CARRIER_DEPS[cid].forEach(function(d){
+      const t = parseTime(d);
+      if(t > now && (best === null || t < best.t)) best = {t:t, cid:cid};
+    });
+  });
+
+  const heroName = document.getElementById('heroName');
+  const heroTime = document.getElementById('heroTime');
+  const heroCD = document.getElementById('heroCountdown');
+  const heroSub = document.getElementById('heroSub');
+  const banner = document.getElementById('imminentBanner');
+
+  if(!best){
+    heroName.textContent = 'Terminé';
+    heroTime.textContent = '—';
+    heroCD.textContent = '';
+    heroSub.textContent = 'Reprise demain à 06h00';
+    heroName.className = 'hero-name';
+    heroCD.className = 'hero-countdown';
+    banner.className = 'imminent-banner';
+    banner.textContent = '';
+    return;
+  }
+
+  const diff = best.t - now;
+  heroName.textContent = CARRIERS[best.cid].label;
+  heroTime.textContent = fmt(best.t);
+  heroCD.textContent = fmtCD(diff);
+  heroSub.textContent = '';
+  heroName.className = 'hero-name' + (diff <= 15 ? ' imminent' : '');
+  heroCD.className = 'hero-countdown' + (diff <= 15 ? ' imminent' : '');
+
+  // Bannière toujours visible avec le prochain départ
+  if(diff <= 15){
+    banner.className = 'imminent-banner show urgent';
+    banner.textContent = '🚨 DÉPART IMMINENT — ' + CARRIERS[best.cid].label + ' — ' + fmt(best.t) + ' — ' + diff + ' MIN';
+  } else {
+    banner.className = 'imminent-banner show';
+    banner.textContent = '🚀 PROCHAIN DÉPART — ' + CARRIERS[best.cid].label + ' — ' + fmt(best.t);
+  }
+}
+
+// Timeline
+function renderTimeline(){
+  const now = nowMin();
+  const START = toMin(6,0), END = toMin(18,30), range = END - START;
+  const pct = Math.max(0, Math.min(100, (now - START) / range * 100));
+
+  document.getElementById('timelineProgress').style.width = pct + '%';
+  document.getElementById('timelineTruck').style.left = Math.max(2, Math.min(96, pct)) + '%';
+
+  // Group deps by unique time
+  const allDeps = {};
+  Object.keys(CARRIER_DEPS).forEach(function(cid){
+    CARRIER_DEPS[cid].forEach(function(d){
+      if(!allDeps[d]) allDeps[d] = {t: parseTime(d), carriers: []};
+      allDeps[d].carriers.push(cid);
+    });
+  });
+
+  // Find next departure time
+  const futureTimes = Object.values(allDeps).filter(function(info){ return info.t > now; });
+  const nextTime = futureTimes.length ? Math.min.apply(null, futureTimes.map(function(i){ return i.t; })) : null;
+
+  const container = document.getElementById('timelinePoints');
+  container.innerHTML = Object.entries(allDeps).map(function(entry){
+    const time = entry[0], info = entry[1];
+    const depPct = Math.max(1, Math.min(99, (info.t - START) / range * 100));
+    const isPast = info.t <= now;
+    const isNext = nextTime !== null && info.t === nextTime;
+    const diff = info.t - now;
+    const isSoon = !isPast && diff <= 30;
+    const dotClass = isPast ? 'past' : (isNext || isSoon) ? 'next' : 'future';
+    const timeClass = isPast ? 'past' : (isNext || isSoon) ? 'next' : '';
+    return '<div class="timeline-point" style="left:' + depPct + '%;top:50%;transform:translate(-50%,-50%)">' +
+      '<div class="timeline-dot ' + dotClass + '"></div>' +
+      '<div class="timeline-time ' + timeClass + '">' + time + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+// Carriers list
+function renderCarriers(){
+  const now = nowMin();
+
+  // Trouver LE prochain départ global (un seul dans toute la liste)
+  let globalNextTime = null, globalNextCid = null;
+  Object.keys(CARRIER_DEPS).forEach(function(cid){
+    CARRIER_DEPS[cid].forEach(function(d){
+      const t = parseTime(d);
+      if(t > now && (globalNextTime === null || t < globalNextTime)){
+        globalNextTime = t;
+        globalNextCid = cid;
+      }
+    });
+  });
+
+  const list = document.getElementById('carriersList');
+  list.innerHTML = Object.keys(CARRIERS).map(function(cid){
+    const c = CARRIERS[cid];
+    const deps = CARRIER_DEPS[cid] || [];
+    const depMins = deps.map(parseTime);
+    const upcoming = depMins.filter(function(t){ return t > now; });
+    const past = depMins.filter(function(t){ return t <= now; });
+    const isDone = upcoming.length === 0;
+    const nxt = upcoming.length ? Math.min.apply(null, upcoming) : null;
+    const diff = nxt ? nxt - now : null;
+    const isImminent = diff !== null && diff <= 15;
+    const isSoon = diff !== null && diff <= 30;
+
+    let rowClass = '', statusText = '';
+    if(isDone){ rowClass = 'c-done'; statusText = 'Terminé'; }
+    else if(past.length > 0){ rowClass = 'c-active'; statusText = 'En tournée'; }
+    else { statusText = ''; }
+
+    const pillsHtml = deps.map(function(d){
+      const t = parseTime(d);
+      let cls = 'dep-future';
+      if(t <= now) cls = 'dep-past';
+      else if(t === globalNextTime && cid === globalNextCid) cls = 'dep-THE-ONE';
+      return '<span class="dep-pill ' + cls + '">' + d + '</span>';
+    }).join('');
+
+    const nb = GARAGES_DATA.filter(function(g){ return g.carriers.some(function(car){ return car.id === cid; }); }).length;
+
+    // Build garage tags for this carrier
+    const garageList = GARAGES_DATA.filter(function(g){
+      return g.carriers.some(function(car){ return car.id === cid; });
+    });
+    const garageTagsHtml = garageList.map(function(g){
+      const carrData = g.carriers.find(function(car){ return car.id === cid; });
+      if(!carrData) return '<span class="garage-name-tag" onclick="searchGarage(\'' + g.g.replace(/'/g,"\\'") + '\')" style="cursor:pointer">' + g.g + '</span>';
+      const now2 = nowMin();
+      const depMins2 = carrData.deps.map(parseTime);
+      const upcoming2 = depMins2.filter(function(t){ return t > now2; });
+      const nxt2 = upcoming2.length ? Math.min.apply(null, upcoming2) : null;
+      const diff2 = nxt2 ? nxt2 - now2 : null;
+      let tagClass = '';
+      if(diff2 !== null && diff2 <= 15) tagClass = 'imminent';
+      else if(diff2 !== null && diff2 <= 30) tagClass = 'soon';
+      return '<span class="garage-name-tag ' + tagClass + '" onclick="searchGarage(\'' + g.g.replace(/'/g,"\\'") + '\')" style="cursor:pointer">' + g.g + '</span>';
+    }).join('');
+
+    return '<div class="carrier-row ' + rowClass + '" onclick="toggleCarrier(\'' + cid + '\')" id="row-' + cid + '">' +
+      '<div class="carrier-row-name">' + c.label + '</div>' +
+      '<div class="carrier-row-deps">' + pillsHtml + '</div>' +
+      '<div class="carrier-row-status">' + statusText + '</div>' +
+      '<div class="carrier-row-count">' + nb + ' garages</div>' +
+      '<div class="carrier-row-chevron">▼</div>' +
+      '</div>' +
+      '<div class="carrier-garages-panel" id="panel-' + cid + '">' +
+      '<div class="carrier-garages-inner">' + garageTagsHtml + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+// Clock
+function renderClock(){
+  const now = new Date();
+  const hms = [now.getHours(), now.getMinutes(), now.getSeconds()].map(function(v){ return String(v).padStart(2,'0'); }).join(':');
+  document.getElementById('heroClock').textContent = hms;
+}
+
+// Click on garage tag -> scroll to search and show result
+function searchGarage(name){
+  searchInput.value = name;
+  doSearch(name);
+  incStat(name);
+  renderTop();
+  searchInput.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+// Track open panels
+const openPanels = new Set();
+
+function toggleCarrier(cid){
+  const row = document.getElementById('row-' + cid);
+  const panel = document.getElementById('panel-' + cid);
+  if(!row || !panel) return;
+  if(openPanels.has(cid)){
+    openPanels.delete(cid);
+    row.classList.remove('open');
+    panel.classList.remove('open');
+  } else {
+    openPanels.add(cid);
+    row.classList.add('open');
+    panel.classList.add('open');
+  }
+}
+
+function renderAll(){ renderHero(); renderTimeline(); renderCarriers(); renderTop(); checkNotifs(); }
+
+// ── ADMIN ─────────────────────────────────────────────────────────────────────
+const ADMIN_PWD = 'livraisonont@p';
+
+function openAdmin(){
+  document.getElementById('adminOverlay').classList.add('show');
+  document.getElementById('adminLogin').style.display = 'block';
+  document.getElementById('adminPanel').style.display = 'none';
+  document.getElementById('adminPwd').value = '';
+  document.getElementById('adminLoginMsg').className = 'admin-msg';
+}
+function closeAdmin(){
+  document.getElementById('adminOverlay').classList.remove('show');
+}
+function checkAdminPwd(){
+  const pwd = document.getElementById('adminPwd').value;
+  if(pwd === ADMIN_PWD){
+    document.getElementById('adminLogin').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    renderAdminList();
+    // Enable/disable deps inputs based on checkboxes
+    ['serge','lande','pb','bearn','hendaye','ace'].forEach(function(cid){
+      const chk = document.getElementById('chk-'+cid);
+      const deps = document.getElementById('deps-'+cid);
+      chk.addEventListener('change', function(){ deps.disabled = !chk.checked; });
+    });
+  } else {
+    const msg = document.getElementById('adminLoginMsg');
+    msg.textContent = 'Mot de passe incorrect';
+    msg.className = 'admin-msg err';
+  }
+}
+
+function adminAddGarage(){
+  const name = document.getElementById('adminGarageName').value.trim();
+  const msg = document.getElementById('adminAddMsg');
+  if(!name){ msg.textContent = 'Saisis un nom de garage'; msg.className = 'admin-msg err'; return; }
+
+  const carriers = [];
+  ['serge','lande','pb','bearn','hendaye','ace'].forEach(function(cid){
+    const chk = document.getElementById('chk-'+cid);
+    if(chk.checked){
+      const depsVal = document.getElementById('deps-'+cid).value.trim();
+      const deps = depsVal ? depsVal.split(',').map(function(d){ return d.trim(); }) : [];
+      carriers.push({id: cid, deps: deps});
+    }
+  });
+
+  if(!carriers.length){ msg.textContent = 'Sélectionne au moins un transporteur'; msg.className = 'admin-msg err'; return; }
+
+  // Check if already exists
+  const exists = GARAGES_DATA.find(function(g){ return g.g.toLowerCase() === name.toLowerCase(); });
+  if(exists){ msg.textContent = 'Ce garage existe déjà !'; msg.className = 'admin-msg err'; return; }
+
+  // Add to local array
+  GARAGES_DATA.push({g: name, carriers: carriers});
+  GARAGES_DATA.sort(function(a,b){ return a.g.localeCompare(b.g); });
+
+  // Save to Firebase
+  if(window.saveGarageToSupabase) window.saveGarageToSupabase(name, carriers);
+
+  msg.textContent = '✓ ' + name + ' ajouté avec succès !';
+  msg.className = 'admin-msg ok';
+
+  // Reset form
+  document.getElementById('adminGarageName').value = '';
+  ['serge','lande','pb','bearn','hendaye','ace'].forEach(function(cid){
+    document.getElementById('chk-'+cid).checked = false;
+    document.getElementById('deps-'+cid).value = '';
+    document.getElementById('deps-'+cid).disabled = true;
+  });
+
+  renderAdminList();
+  renderCarriers();
+}
+
+function adminDeleteGarage(name){
+  if(!confirm('Supprimer "' + name + '" ?')) return;
+  const idx = GARAGES_DATA.findIndex(function(g){ return g.g === name; });
+  if(idx !== -1) GARAGES_DATA.splice(idx, 1);
+  if(window.deleteGarageFromSupabase) window.deleteGarageFromSupabase(name);
+  renderAdminList();
+  renderCarriers();
+}
+
+function renderAdminList(){
+  const q = (document.getElementById('adminDeleteSearch').value||'').toLowerCase();
+  const list = document.getElementById('adminGarageList');
+  const filtered = GARAGES_DATA.filter(function(g){ return g.g.toLowerCase().includes(q); });
+  list.innerHTML = filtered.map(function(g){
+    const carrierNames = g.carriers.map(function(c){ return CARRIERS[c.id]?CARRIERS[c.id].label:c.id; }).join(', ');
+    const safeName = g.g.replace(/'/g,"\'");
+    return '<div class="admin-garage-item">' +
+      '<div><div style="font-weight:600">' + g.g + '</div>' +
+      '<div style="font-size:11px;color:var(--muted);font-family:DM Mono,monospace">' + carrierNames + '</div></div>' +
+      '<div>' +
+      '<button class="btn-edit" onclick="adminEditGarage(\'' + safeName + '\')">Modifier</button>' +
+      '<button onclick="adminDeleteGarage(\'' + safeName + '\')">Supprimer</button>' +
+      '</div></div>';
+  }).join('');
+}
+
+// ── EDIT GARAGE ──────────────────────────────────────────────────────────────
+var currentEditName = null;
+
+function adminEditGarage(name){
+  currentEditName = name;
+  const gd = GARAGES_DATA.find(function(g){ return g.g === name; });
+  if(!gd) return;
+
+  document.getElementById('editGarageName').textContent = name;
+
+  // Reset all
+  ['serge','lande','pb','bearn','hendaye','ace'].forEach(function(cid){
+    const chk = document.getElementById('echk-'+cid);
+    const deps = document.getElementById('edeps-'+cid);
+    chk.checked = false;
+    deps.value = '';
+    deps.disabled = true;
+    // Re-attach listener
+    chk.onchange = function(){ deps.disabled = !chk.checked; };
+  });
+
+  // Fill with current data
+  gd.carriers.forEach(function(c){
+    const chk = document.getElementById('echk-'+c.id);
+    const deps = document.getElementById('edeps-'+c.id);
+    if(chk){
+      chk.checked = true;
+      deps.disabled = false;
+      deps.value = c.deps.join(',');
+    }
+  });
+
+  document.getElementById('adminEditModal').classList.add('show');
+  document.getElementById('adminEditMsg').className = 'admin-msg';
+  document.getElementById('adminEditModal').scrollIntoView({behavior:'smooth'});
+}
+
+function adminSaveEdit(){
+  if(!currentEditName) return;
+  const msg = document.getElementById('adminEditMsg');
+
+  const carriers = [];
+  ['serge','lande','pb','bearn','hendaye','ace'].forEach(function(cid){
+    const chk = document.getElementById('echk-'+cid);
+    if(chk.checked){
+      const depsVal = document.getElementById('edeps-'+cid).value.trim();
+      const deps = depsVal ? depsVal.split(',').map(function(d){ return d.trim(); }) : [];
+      carriers.push({id: cid, deps: deps});
+    }
+  });
+
+  if(!carriers.length){ msg.textContent = 'Sélectionne au moins un transporteur'; msg.className = 'admin-msg err'; return; }
+
+  const idx = GARAGES_DATA.findIndex(function(g){ return g.g === currentEditName; });
+  if(idx !== -1) GARAGES_DATA[idx].carriers = carriers;
+
+  if(window.saveGarageToSupabase) window.saveGarageToSupabase(currentEditName, carriers);
+
+  msg.textContent = '✓ ' + currentEditName + ' modifié !';
+  msg.className = 'admin-msg ok';
+
+  renderAdminList();
+  renderCarriers();
+
+  setTimeout(function(){
+    document.getElementById('adminEditModal').classList.remove('show');
+    currentEditName = null;
+  }, 1500);
+}
+
+// Ouvrir admin avec hash #admin
+window.addEventListener('hashchange', function(){
+  if(window.location.hash === '#admin') openAdmin();
+});
+
+// Attendre que tout soit chargé avant de vérifier le hash
+window.addEventListener('load', function(){
+  if(window.location.hash === '#admin') openAdmin();
+});
+
+// Bouton admin caché - 4 clics
+var adminClickCount = 0;
+var adminClickTimer = null;
+document.getElementById('adminTrigger').addEventListener('click', function(){
+  adminClickCount++;
+  clearTimeout(adminClickTimer);
+  if(adminClickCount >= 4){
+    adminClickCount = 0;
+    openAdmin();
+  } else {
+    adminClickTimer = setTimeout(function(){ adminClickCount = 0; }, 2000);
+  }
+});
+
+function renderAllKeepOpen(){
+  renderHero(); renderTimeline(); renderTop(); checkNotifs();
+  renderCarriers();
+  // Re-open panels that were open
+  openPanels.forEach(function(cid){
+    const row = document.getElementById('row-' + cid);
+    const panel = document.getElementById('panel-' + cid);
+    if(row) row.classList.add('open');
+    if(panel) panel.classList.add('open');
+  });
+}
+
+renderAllKeepOpen();
+setInterval(renderAllKeepOpen, 15000);
+setInterval(renderClock, 1000);
+setInterval(function(){ if(searchInput.value) doSearch(searchInput.value); }, 30000);
+</script>
+</body>
+</html>

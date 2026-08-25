@@ -4,6 +4,27 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ABS-Cover — Vitres teintées, PPF, Covering | Pays Basque & Landes</title>
+<meta name="description" content="Vitres teintées auto & bâtiment, protection carrosserie PPF certifiée Hexis BodyFence, covering et impression numérique à Benesse-Maremne. Devis par téléphone au 06 31 81 24 21.">
+
+<!-- Favicons — logo ABS-Cover redimensionné via le CDN Wix existant -->
+<link rel="icon" type="image/png" sizes="32x32" href="https://static.wixstatic.com/media/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png/v1/fill/w_32,h_32,q_90,enc_auto/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="https://static.wixstatic.com/media/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png/v1/fill/w_16,h_16,q_90,enc_auto/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://static.wixstatic.com/media/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png/v1/fill/w_180,h_180,q_90,enc_auto/apple-touch-icon.png">
+<link rel="shortcut icon" href="https://static.wixstatic.com/media/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png/v1/fill/w_32,h_32,q_90,enc_auto/favicon-32.png">
+
+<!-- Open Graph / partage réseaux sociaux -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ABS-Cover">
+<meta property="og:title" content="ABS-Cover — Vitres teintées, PPF, Covering | Pays Basque & Landes">
+<meta property="og:description" content="Vitres teintées auto & bâtiment, protection carrosserie PPF certifiée Hexis BodyFence, covering et impression numérique à Benesse-Maremne.">
+<meta property="og:image" content="https://static.wixstatic.com/media/81cf68_bcb078de360f4faebc8554a7d84950ea~mv2.jpg/v1/fill/w_1200,h_630,q_80,enc_auto/81cf68_bcb078de360f4faebc8554a7d84950ea~mv2.jpg">
+<meta property="og:url" content="https://www.abs-cover.com/">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ABS-Cover — Vitres teintées, PPF, Covering | Pays Basque & Landes">
+<meta name="twitter:description" content="Vitres teintées auto & bâtiment, protection carrosserie PPF certifiée Hexis BodyFence, covering et impression numérique à Benesse-Maremne.">
+<meta name="twitter:image" content="https://static.wixstatic.com/media/81cf68_bcb078de360f4faebc8554a7d84950ea~mv2.jpg/v1/fill/w_1200,h_630,q_80,enc_auto/81cf68_bcb078de360f4faebc8554a7d84950ea~mv2.jpg">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -941,12 +962,30 @@ formConfirmReset.addEventListener('click', () => {
   function saveChoice(value){
     try { localStorage.setItem('abscover_cookie_choice', value); } catch(e){}
     banner.classList.remove('show');
-    // Si un outil de mesure d'audience est ajouté un jour, ne le charger
-    // que lorsque localStorage.abscover_cookie_choice === 'accepted'.
+    if(value === 'accepted') loadAnalyticsIfConsented();
   }
   accept.addEventListener('click', () => saveChoice('accepted'));
   refuse.addEventListener('click', () => saveChoice('refused'));
+
+  // Si le choix a déjà été fait lors d'une visite précédente, on respecte
+  // immédiatement le consentement (pas besoin de réafficher le bandeau).
+  if(choice === 'accepted') loadAnalyticsIfConsented();
 })();
+
+// ===== MESURE D'AUDIENCE — désactivée tant qu'aucun outil n'est configuré =====
+// À FAIRE : créer un compte (Plausible, Fathom ou Matomo — respectueux de la vie
+// privée, souvent dispensés de bandeau cookie ; sinon Google Analytics 4, qui
+// lui exige le consentement ci-dessus) puis décommenter et compléter le script
+// correspondant. Ne charger l'outil que via cette fonction : elle garantit que
+// rien n'est déposé tant que le visiteur n'a pas cliqué sur "Accepter".
+function loadAnalyticsIfConsented(){
+  // Exemple avec Plausible (à adapter avec le vrai nom de domaine) :
+  // const s = document.createElement('script');
+  // s.defer = true;
+  // s.dataset.domain = 'abs-cover.com';
+  // s.src = 'https://plausible.io/js/script.js';
+  // document.head.appendChild(s);
+}
 
 // ===== Respect du confort de l'utilisateur : désactive les effets "gadget" si demandé =====
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

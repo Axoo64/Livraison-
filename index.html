@@ -266,9 +266,73 @@
     .lightbox-nav{width:40px; height:40px; font-size:18px;}
     .lightbox-close{width:38px; height:38px; top:14px; right:14px;}
   }
+
+  /* ===== PRELOADER ===== */
+  body.loading{overflow:hidden; height:100vh;}
+  .preloader{
+    position:fixed; inset:0; z-index:500; background:var(--black);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    transition:opacity .6s cubic-bezier(.16,.8,.3,1), visibility .6s cubic-bezier(.16,.8,.3,1);
+  }
+  .preloader.hide{opacity:0; visibility:hidden; pointer-events:none;}
+  .preloader-logo{
+    font-family:'Bebas Neue',sans-serif; font-size:clamp(38px,7vw,64px);
+    letter-spacing:0.04em; color:var(--white); text-transform:uppercase; position:relative;
+  }
+  .preloader-logo span{color:var(--accent);}
+  .preloader-track{position:relative; width:180px; height:2px; background:var(--line); margin-top:22px; overflow:hidden;}
+  .preloader-bar{position:absolute; top:0; left:0; height:100%; width:0%; background:var(--accent); transition:width .2s ease;}
+  .preloader-pct{margin-top:12px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted-pl,var(--grey)); letter-spacing:0.1em;}
+
+  /* ===== GRAIN — texture de fond subtile sur toute la page ===== */
+  .grain{
+    position:fixed; inset:-100px; z-index:250; pointer-events:none; opacity:0.035; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ===== CURSEUR PERSONNALISÉ (desktop uniquement) ===== */
+  @media (pointer:fine){
+    a, button, .serv-card, .g-item, .route-stop, .gtab{cursor:none;}
+    .cursor-dot{
+      position:fixed; top:0; left:0; width:6px; height:6px; background:var(--accent);
+      border-radius:50%; pointer-events:none; z-index:400; transform:translate(-50%,-50%);
+      opacity:0; transition:opacity .2s ease;
+    }
+    .cursor-ring{
+      position:fixed; top:0; left:0; width:32px; height:32px; border:1px solid var(--accent);
+      border-radius:50%; pointer-events:none; z-index:400; transform:translate(-50%,-50%);
+      opacity:0; transition:width .25s cubic-bezier(.16,.8,.3,1), height .25s cubic-bezier(.16,.8,.3,1), background .25s ease, opacity .2s ease;
+    }
+    .cursor-ring.hover{width:54px; height:54px; background:rgba(232,53,43,0.1);}
+  }
+  @media (pointer:coarse){
+    .cursor-dot, .cursor-ring{display:none;}
+  }
+
+  /* ===== TILT 3D sur les cartes de service ===== */
+  @media (pointer:fine){
+    .serv-card{transition:transform .15s ease-out; will-change:transform;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .preloader{display:none;}
+    .grain{display:none;}
+    .cursor-dot, .cursor-ring{display:none;}
+    a, button, .serv-card, .g-item, .route-stop, .gtab{cursor:auto;}
+  }
 </style>
 </head>
-<body>
+<body class="loading">
+
+<div class="preloader" id="preloader">
+  <div class="preloader-logo">ABS<span>-</span>COVER</div>
+  <div class="preloader-track"><div class="preloader-bar" id="preloaderBar"></div></div>
+  <div class="preloader-pct" id="preloaderPct">0%</div>
+</div>
+
+<div class="grain"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+<div class="cursor-dot" id="cursorDot"></div>
 
 <div class="route-rail" id="routeRail">
   <div class="route-track"><div class="route-fill" id="routeFill"></div></div>
@@ -736,6 +800,112 @@ document.getElementById('contactForm').addEventListener('submit', function(e){
   e.preventDefault();
   document.getElementById('formMsg').classList.add('show');
 });
+
+// ===== Respect du confort de l'utilisateur : désactive les effets "gadget" si demandé =====
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ===== PRÉCHARGEUR — fausse progression fluide puis reveal du site =====
+(function(){
+  const preloader = document.getElementById('preloader');
+  const bar = document.getElementById('preloaderBar');
+  const pct = document.getElementById('preloaderPct');
+  if(reduceMotion){
+    preloader.remove();
+    document.body.classList.remove('loading');
+    return;
+  }
+  let progress = 0;
+  const timer = setInterval(() => {
+    progress += Math.random() * 22;
+    if(progress >= 100){
+      progress = 100;
+      clearInterval(timer);
+      setTimeout(() => {
+        preloader.classList.add('hide');
+        document.body.classList.remove('loading');
+        setTimeout(() => preloader.remove(), 700);
+      }, 200);
+    }
+    bar.style.width = progress + '%';
+    pct.textContent = Math.round(progress) + '%';
+  }, 130);
+})();
+
+// ===== CURSEUR PERSONNALISÉ — point qui suit la souris, anneau qui rattrape en douceur =====
+if(!reduceMotion && window.matchMedia('(pointer:fine)').matches){
+  const cursorDot = document.getElementById('cursorDot');
+  const cursorRing = document.getElementById('cursorRing');
+  let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+  let ringX = mouseX, ringY = mouseY;
+
+  window.addEventListener('mousemove', e => {
+    mouseX = e.clientX; mouseY = e.clientY;
+    cursorDot.style.left = mouseX + 'px';
+    cursorDot.style.top = mouseY + 'px';
+    cursorDot.style.opacity = '1';
+    cursorRing.style.opacity = '1';
+  });
+  document.addEventListener('mouseleave', () => {
+    cursorDot.style.opacity = '0';
+    cursorRing.style.opacity = '0';
+  });
+
+  function ringLoop(){
+    ringX += (mouseX - ringX) * 0.18;
+    ringY += (mouseY - ringY) * 0.18;
+    cursorRing.style.left = ringX + 'px';
+    cursorRing.style.top = ringY + 'px';
+    requestAnimationFrame(ringLoop);
+  }
+  ringLoop();
+
+  document.querySelectorAll('a, button, .serv-card, .g-item, .route-stop, .gtab').forEach(el => {
+    el.addEventListener('mouseenter', () => cursorRing.classList.add('hover'));
+    el.addEventListener('mouseleave', () => cursorRing.classList.remove('hover'));
+  });
+}
+
+// ===== TILT 3D — les cartes de service basculent légèrement vers le curseur =====
+if(!reduceMotion && window.matchMedia('(pointer:fine)').matches){
+  document.querySelectorAll('.serv-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left, y = e.clientY - rect.top;
+      const rotateY = ((x - rect.width / 2) / (rect.width / 2)) * 6;
+      const rotateX = -((y - rect.height / 2) / (rect.height / 2)) * 6;
+      card.style.transform = `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02,1.02,1.02)`;
+    });
+    card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+  });
+}
+
+// ===== COMPTEURS ANIMÉS — les chiffres clés montent en scrollant jusqu'à eux =====
+if(!reduceMotion){
+  function animateCount(el){
+    const match = el.textContent.trim().match(/^(\d+)(.*)$/);
+    if(!match) return;
+    const target = parseInt(match[1], 10);
+    const suffix = match[2];
+    const duration = 1300;
+    const start = performance.now();
+    function tick(now){
+      const p = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * eased) + suffix;
+      if(p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+  const statObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        animateCount(entry.target);
+        statObserver.unobserve(entry.target);
+      }
+    });
+  }, {threshold:0.5});
+  document.querySelectorAll('.stat .num').forEach(el => statObserver.observe(el));
+}
 </script>
 
 </body>

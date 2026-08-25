@@ -168,8 +168,6 @@
   input, select, textarea{width:100%; border:1px solid var(--line); background:var(--panel); padding:14px; font-family:'Inter',sans-serif; font-size:14px; color:var(--white);}
   input:focus, textarea:focus{outline:1px solid var(--accent);}
   textarea{resize:vertical; min-height:110px;}
-  .form-msg{display:none; background:var(--accent); color:var(--white); padding:16px; font-size:13px; font-weight:600; margin-top:4px;}
-  .form-msg.show{display:block;}
 
   .wed{display:grid; grid-template-columns:1fr; gap:1px; background:var(--line); border:1px solid var(--line);}
   @media(min-width:860px){.wed{grid-template-columns:1fr 1fr;}}
@@ -320,6 +318,53 @@
     .cursor-dot, .cursor-ring{display:none;}
     a, button, .serv-card, .g-item, .route-stop, .gtab{cursor:auto;}
   }
+
+  /* ===== FORMULAIRE — erreurs de validation ===== */
+  .field{margin-bottom:0;}
+  .field-error{
+    display:none; color:var(--accent); font-family:'JetBrains Mono',monospace;
+    font-size:11px; letter-spacing:0.02em; margin-top:6px;
+  }
+  .field.has-error input, .field.has-error select, .field.has-error textarea{
+    border-color:var(--accent); box-shadow:0 0 0 1px var(--accent);
+  }
+  .field.has-error .field-error{display:block;}
+
+  /* ===== FORMULAIRE — confirmation ===== */
+  .form-confirm{
+    display:none; border:1px solid var(--line); background:var(--panel);
+    padding:36px 28px; text-align:left;
+  }
+  .form-confirm.show{display:block;}
+  .form-confirm .fc-icon{
+    width:44px; height:44px; border-radius:50%; background:var(--accent);
+    color:var(--white); display:flex; align-items:center; justify-content:center;
+    font-size:20px; margin-bottom:18px;
+  }
+  .form-confirm h3{font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:0.01em; margin-bottom:10px;}
+  .form-confirm p{color:var(--grey); font-size:14px; line-height:1.7; margin-bottom:8px;}
+  .form-confirm a{color:var(--accent);}
+  .form-confirm .btn{margin-top:16px;}
+
+  /* ===== BANDEAU COOKIES ===== */
+  .cookie-banner{
+    position:fixed; left:16px; right:16px; bottom:16px; z-index:350;
+    max-width:640px; margin:0 auto;
+    background:var(--carbon); border:1px solid var(--line);
+    padding:20px 22px; box-shadow:0 12px 40px rgba(0,0,0,0.5);
+    transform:translateY(140%); transition:transform .5s cubic-bezier(.16,.8,.3,1);
+  }
+  .cookie-banner.show{transform:translateY(0);}
+  .cookie-banner p{color:var(--grey); font-size:13px; line-height:1.6; margin-bottom:14px;}
+  .cookie-banner a{color:var(--accent); text-decoration:underline;}
+  .cookie-actions{display:flex; gap:10px; flex-wrap:wrap;}
+  .cookie-actions button{
+    font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.04em; text-transform:uppercase;
+    padding:11px 18px; cursor:pointer; border:1px solid var(--white); background:none; color:var(--white);
+  }
+  .cookie-actions button.accept{background:var(--accent); border-color:var(--accent); font-weight:700;}
+  .cookie-actions button:hover{opacity:0.85;}
+  @media(max-width:860px){.cookie-banner{bottom:64px;}}
 </style>
 </head>
 <body class="loading">
@@ -333,6 +378,14 @@
 <div class="grain"></div>
 <div class="cursor-ring" id="cursorRing"></div>
 <div class="cursor-dot" id="cursorDot"></div>
+
+<div class="cookie-banner" id="cookieBanner">
+  <p>Ce site utilise uniquement des cookies techniques nécessaires à son fonctionnement. Aucun cookie de mesure d'audience ou publicitaire n'est déposé sans votre accord. En savoir plus : <a href="politique-de-confidentialite.html">politique de confidentialité</a>.</p>
+  <div class="cookie-actions">
+    <button class="accept" id="cookieAccept" type="button">Accepter</button>
+    <button id="cookieRefuse" type="button">Refuser</button>
+  </div>
+</div>
 
 <div class="route-rail" id="routeRail">
   <div class="route-track"><div class="route-fill" id="routeFill"></div></div>
@@ -564,22 +617,44 @@
         <p><a href="https://www.facebook.com/Ab.solution6440" target="_blank" rel="noopener noreferrer">Facebook</a> · <a href="https://www.instagram.com/ab.solution6440/" target="_blank" rel="noopener noreferrer">Instagram</a> — @ab.solution6440</p>
       </div>
     </div>
-    <form id="contactForm">
-      <div><label>Nom</label><input type="text" required></div>
-      <div><label>Email</label><input type="email" required></div>
-      <div><label>Sujet</label>
-        <select><option>Vitres teintées</option><option>Protection PPF</option><option>Covering</option><option>Impression numérique</option><option>Autre</option></select>
+    <form id="contactForm" novalidate>
+      <div class="field" id="field-nom">
+        <label for="inputNom">Nom</label>
+        <input type="text" id="inputNom" name="nom" autocomplete="name">
+        <div class="field-error">Merci d'indiquer votre nom.</div>
       </div>
-      <div><label>Message</label><textarea placeholder="Marque, modèle, année du véhicule..."></textarea></div>
+      <div class="field" id="field-email">
+        <label for="inputEmail">Email</label>
+        <input type="email" id="inputEmail" name="email" autocomplete="email">
+        <div class="field-error" id="errorEmail">Merci d'indiquer une adresse email valide.</div>
+      </div>
+      <div class="field" id="field-sujet">
+        <label for="inputSujet">Sujet</label>
+        <select id="inputSujet" name="sujet"><option>Vitres teintées</option><option>Protection PPF</option><option>Covering</option><option>Impression numérique</option><option>Autre</option></select>
+      </div>
+      <div class="field" id="field-message">
+        <label for="inputMessage">Message</label>
+        <textarea id="inputMessage" name="message" placeholder="Marque, modèle, année du véhicule..."></textarea>
+        <div class="field-error">Merci de décrire brièvement votre demande.</div>
+      </div>
       <button class="btn fill" type="submit" style="align-self:flex-start; border:none;">Envoyer</button>
-      <div class="form-msg" id="formMsg">Message simulé envoyé — le formulaire réel enverrait directement l'email à l'atelier.</div>
     </form>
+    <div class="form-confirm" id="formConfirm">
+      <div class="fc-icon">✓</div>
+      <h3>Message prêt à partir</h3>
+      <p>Votre client email va s'ouvrir avec votre demande déjà rédigée — il ne vous reste qu'à cliquer sur envoyer.</p>
+      <p>Si rien ne s'ouvre automatiquement (bloqueur, pas de client mail configuré), appelez-nous directement au <a href="tel:0631812421">06 31 81 24 21</a>.</p>
+      <button class="btn" id="formConfirmReset" type="button">Envoyer un autre message</button>
+    </div>
   </div>
 </section>
 
 <footer>
   <div class="logo" style="font-size:16px;"><img src="https://static.wixstatic.com/media/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png/v1/fill/w_100,h_111,q_85,enc_auto/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png" alt="Logo ABS-Cover" style="height:22px;">ABS<span>-</span>COVER</div>
-  <span>REFONTE DE DÉMONSTRATION — CONTENU ET PHOTOS © ABS-COVER</span>
+  <span style="display:flex; gap:14px; flex-wrap:wrap;">
+    <a href="mentions-legales.html" style="color:var(--grey); text-decoration:none;">Mentions légales &amp; CGV</a>
+    <a href="politique-de-confidentialite.html" style="color:var(--grey); text-decoration:none;">Politique de confidentialité</a>
+  </span>
   <span>06 31 81 24 21 — BENESSE-MAREMNE (40)</span>
 </footer>
 
@@ -796,10 +871,82 @@ window.addEventListener('scroll', () => {
 }, {passive:true});
 updateProgress();
 
-document.getElementById('contactForm').addEventListener('submit', function(e){
+// ===== FORMULAIRE — validation + envoi réel (mailto) + confirmation =====
+// Adresse qui reçoit les demandes. À CONFIRMER / REMPLACER si ce n'est pas la bonne.
+const CONTACT_EMAIL = 'contact@abs-cover.com';
+
+const contactForm = document.getElementById('contactForm');
+const formConfirm = document.getElementById('formConfirm');
+const formConfirmReset = document.getElementById('formConfirmReset');
+
+function setFieldError(fieldId, hasError){
+  const field = document.getElementById(fieldId);
+  if(field) field.classList.toggle('has-error', hasError);
+}
+
+function isValidEmail(value){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+contactForm.addEventListener('submit', function(e){
   e.preventDefault();
-  document.getElementById('formMsg').classList.add('show');
+
+  const nom = document.getElementById('inputNom').value.trim();
+  const email = document.getElementById('inputEmail').value.trim();
+  const sujet = document.getElementById('inputSujet').value;
+  const message = document.getElementById('inputMessage').value.trim();
+
+  const nomValid = nom.length > 0;
+  const emailValid = isValidEmail(email);
+  const messageValid = message.length > 0;
+
+  setFieldError('field-nom', !nomValid);
+  setFieldError('field-email', !emailValid);
+  setFieldError('field-message', !messageValid);
+
+  if(!nomValid || !emailValid || !messageValid){
+    const firstInvalid = contactForm.querySelector('.has-error input, .has-error textarea');
+    if(firstInvalid) firstInvalid.focus();
+    return;
+  }
+
+  const subjectLine = encodeURIComponent(`Demande de devis — ${sujet} — ${nom}`);
+  const bodyLine = encodeURIComponent(
+    `Nom : ${nom}\nEmail : ${email}\nSujet : ${sujet}\n\nMessage :\n${message}`
+  );
+  window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subjectLine}&body=${bodyLine}`;
+
+  contactForm.style.display = 'none';
+  formConfirm.classList.add('show');
 });
+
+formConfirmReset.addEventListener('click', () => {
+  contactForm.reset();
+  ['field-nom', 'field-email', 'field-message'].forEach(id => setFieldError(id, false));
+  formConfirm.classList.remove('show');
+  contactForm.style.display = '';
+});
+
+// ===== BANDEAU COOKIES — avec refus explicite, mémorisé localement =====
+(function(){
+  const banner = document.getElementById('cookieBanner');
+  const accept = document.getElementById('cookieAccept');
+  const refuse = document.getElementById('cookieRefuse');
+  let choice = null;
+  try { choice = localStorage.getItem('abscover_cookie_choice'); } catch(e){}
+
+  if(!choice){
+    setTimeout(() => banner.classList.add('show'), 800);
+  }
+  function saveChoice(value){
+    try { localStorage.setItem('abscover_cookie_choice', value); } catch(e){}
+    banner.classList.remove('show');
+    // Si un outil de mesure d'audience est ajouté un jour, ne le charger
+    // que lorsque localStorage.abscover_cookie_choice === 'accepted'.
+  }
+  accept.addEventListener('click', () => saveChoice('accepted'));
+  refuse.addEventListener('click', () => saveChoice('refused'));
+})();
 
 // ===== Respect du confort de l'utilisateur : désactive les effets "gadget" si demandé =====
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

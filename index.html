@@ -3,1913 +3,740 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Départs Livraison</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>ABS-Cover — Vitres teintées, PPF, Covering | Pays Basque & Landes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  :root{
+    --black:#0a0a0b; --carbon:#161618; --panel:#1e1e21;
+    --white:#f5f4f2; --grey:#9a9a9d;
+    --line:rgba(245,244,242,0.1);
+    --accent:#e8352b;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--black); color:var(--white); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;}
+  ::selection{background:var(--accent); color:var(--white);}
+  img{display:block; max-width:100%;}
+  .mono{font-family:'JetBrains Mono',monospace;}
 
-:root {
-  --bg: #0e0c0c;
-  --surface: #1a1616;
-  --surface2: #221e1e;
-  --border: #332a2a;
-  --accent: #e84040;
-  --red: #e84040;
-  --orange: #f59020;
-  --green: #40d490;
-  --blue: #4090f5;
-  --purple: #a060f5;
-  --text: #f2eeee;
-  --muted: #7a6868;
-  --muted2: #4a3838;
-}
-* { margin:0; padding:0; box-sizing:border-box; }
-html { font-size:16px; }
-body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; }
+  header{
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:18px 5%; background:rgba(10,10,11,0.85); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .logo{font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:0.03em; color:var(--white); text-transform:uppercase; display:flex; align-items:center; gap:10px;}
+  .logo img{height:34px; width:auto; display:block;}
+  .logo span{color:var(--accent);}
+  nav{display:none; gap:6px; align-items:center;}
+  nav a{color:var(--grey); text-decoration:none; font-size:12.5px; font-family:'JetBrains Mono',monospace; letter-spacing:0.04em; padding:8px 14px; position:relative; transition:color .2s ease;}
+  nav a::after{content:''; position:absolute; left:14px; right:14px; bottom:2px; height:1px; background:var(--accent); transform:scaleX(0); transition:transform .25s ease; transform-origin:left;}
+  nav a:hover{color:var(--white);}
+  nav a.active{color:var(--white);}
+  nav a.active::after{transform:scaleX(1);}
+  @media(min-width:860px){nav{display:flex;}}
+  .call-btn{font-family:'JetBrains Mono',monospace; font-size:13px; text-decoration:none; color:var(--white); background:var(--accent); padding:10px 18px; font-weight:600;}
 
-/* ── IMMINENT BANNER ── */
-.imminent-banner {
-  display: none;
-  text-align: center;
-  padding: 9px 16px;
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 3px;
-  position: sticky;
-  top: 0;
-  z-index: 200;
-  background: var(--surface2);
-  color: var(--muted);
-  border-bottom: 1px solid var(--border);
-  transition: background .3s, color .3s;
-}
-.imminent-banner.show { display: block; }
-.imminent-banner.urgent {
-  background: var(--red);
-  color: #fff;
-  animation: flashBanner 1s infinite;
-}
-@keyframes flashBanner { 0%,100%{background:var(--red)} 50%{background:#a02020} }
+  /* ===== ROUTE / PARCOURS — rail vertical fixe ===== */
+  .route-rail{
+    position:fixed; left:26px; top:50%; transform:translateY(-50%); z-index:90;
+    display:none; flex-direction:column; align-items:center; gap:0;
+  }
+  @media(min-width:1080px){.route-rail{display:flex;}}
+  .route-track{position:relative; width:2px; height:280px; background:var(--line);}
+  .route-fill{position:absolute; top:0; left:0; width:2px; height:0%; background:var(--accent); transition:height .1s linear;}
+  .route-stop{
+    position:absolute; left:50%; transform:translate(-50%,-50%); width:34px; height:34px;
+    display:flex; align-items:center; justify-content:center; z-index:2; cursor:pointer; border:none; background:none; padding:0;
+  }
+  .route-stop .dot{width:9px; height:9px; border-radius:50%; background:var(--carbon); border:1.5px solid var(--grey); transition:all .3s ease;}
+  .route-stop:hover .dot{border-color:var(--white);}
+  .route-stop.active .dot{background:var(--accent); border-color:var(--accent); box-shadow:0 0 0 5px rgba(232,53,43,0.18);}
+  .route-label{
+    position:absolute; left:26px; top:50%; transform:translateY(-50%); white-space:nowrap;
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--grey); letter-spacing:0.05em;
+    opacity:0; transition:opacity .25s ease;
+  }
+  .route-stop.active .route-label{opacity:1; color:var(--white);}
+  .route-stop:nth-child(1){top:0%;} .route-stop:nth-child(2){top:25%;} .route-stop:nth-child(3){top:50%;} .route-stop:nth-child(4){top:75%;} .route-stop:nth-child(5){top:100%;}
 
-/* ── HERO ── */
-.hero {
-  background: #0a0808;
-  padding: 24px 20px 20px;
-  border-bottom: 2px solid var(--red);
-  position: relative;
-}
+  /* ===== HERO — Ken Burns ===== */
+  .hero{
+    min-height:100vh; position:relative; display:flex; align-items:flex-end; overflow:hidden;
+  }
+  .hero-bg{
+    position:absolute; inset:-4%; z-index:0;
+    background-image:linear-gradient(180deg, rgba(10,10,11,0.15) 0%, rgba(10,10,11,0.55) 60%, rgba(10,10,11,0.98) 100%),
+      url('https://static.wixstatic.com/media/81cf68_bcb078de360f4faebc8554a7d84950ea~mv2.jpg/v1/fill/w_1600,h_1000,q_80,enc_auto/81cf68_bcb078de360f4faebc8554a7d84950ea~mv2.jpg');
+    background-size:cover; background-position:center 38%;
+    animation:kenburns 26s ease-in-out infinite alternate;
+    will-change:transform;
+  }
+  @keyframes kenburns{from{transform:scale(1);} to{transform:scale(1.09);}}
+  .hero-content{position:relative; z-index:3; padding:0 5% 90px; width:100%;}
+  .hero-eyebrow{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--accent); letter-spacing:0.15em; text-transform:uppercase; margin-bottom:20px; display:flex; align-items:center; gap:10px;}
+  .hero-eyebrow::before{content:''; width:26px; height:1px; background:var(--accent);}
+  h1{font-family:'Bebas Neue',sans-serif; font-size:clamp(56px,11vw,150px); line-height:0.86; letter-spacing:0.01em; max-width:960px; overflow:hidden;}
+  h1 .line{display:block; overflow:hidden;}
+  h1 .line span{display:block; transform:translateY(110%); animation:riseUp 0.9s cubic-bezier(.16,.8,.3,1) forwards;}
+  h1 .line:nth-child(2) span{animation-delay:0.14s; color:transparent; -webkit-text-stroke:1.5px var(--white);}
+  @keyframes riseUp{to{transform:translateY(0);}}
+  .hero-sub{font-size:17px; color:var(--grey); max-width:480px; margin-top:26px; line-height:1.6; opacity:0; animation:fadeUp .8s cubic-bezier(.16,.8,.3,1) forwards; animation-delay:0.5s;}
+  .hero-actions{display:flex; gap:14px; margin-top:36px; flex-wrap:wrap; opacity:0; animation:fadeUp .8s cubic-bezier(.16,.8,.3,1) forwards; animation-delay:0.68s;}
+  @keyframes fadeUp{from{opacity:0; transform:translateY(16px);} to{opacity:1; transform:none;}}
+  .scroll-hint{position:absolute; bottom:26px; left:5%; z-index:3; display:flex; align-items:center; gap:10px; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--grey); text-transform:uppercase; letter-spacing:0.06em;}
+  .scroll-hint::after{content:''; width:1px; height:26px; background:linear-gradient(var(--accent), transparent);}
 
-/* Heure en haut à droite, bien contrastée */
-.hero-clock {
-  position: absolute;
-  top: 18px; right: 20px;
-  font-family: 'DM Mono', monospace;
-  font-size: 22px;
-  color: var(--accent);
-  letter-spacing: 2px;
-  font-weight: 500;
-}
+  .btn{font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:0.04em; text-transform:uppercase; padding:16px 28px; text-decoration:none; display:inline-block; border:1px solid var(--white); color:var(--white); transition:all .2s ease;}
+  .btn.fill{background:var(--accent); border-color:var(--accent); color:var(--white); font-weight:700;}
+  .btn.fill:hover{background:var(--white); border-color:var(--white); color:var(--black);}
+  .btn:not(.fill):hover{background:var(--white); color:var(--black);}
 
-.hero-label {
-  font-family:'DM Mono',monospace; font-size:9px;
-  letter-spacing:4px; text-transform:uppercase;
-  color: var(--muted); margin-bottom:4px;
-}
+  .strip{background:var(--accent); color:var(--white); overflow:hidden; white-space:nowrap;}
+  .strip-track{display:inline-block; padding:10px 0; animation:scroll 20s linear infinite;}
+  .strip-track span{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:12px; letter-spacing:0.05em; margin:0 24px; text-transform:uppercase;}
+  @keyframes scroll{from{transform:translateX(0);} to{transform:translateX(-50%);}}
 
-/* NOM DU TRANSPORTEUR — star de la page */
-.hero-name {
-  font-family:'Bebas Neue',sans-serif;
-  font-size: clamp(64px, 16vw, 120px);
-  line-height: 0.9;
-  letter-spacing: 4px;
-  color: #ffffff;
-  transition: color .3s;
-}
-.hero-name.imminent {
-  color: #ffffff;
-}
-@keyframes flashName { 0%,100%{opacity:1} 50%{opacity:.7} }
+  section{padding:110px 5% 110px 5%; scroll-margin-top:64px;}
+  @media(min-width:1080px){section{padding-left:9%;}}
+  .head-row{display:flex; justify-content:space-between; align-items:flex-end; gap:20px; flex-wrap:wrap; margin-bottom:56px; border-bottom:1px solid var(--line); padding-bottom:26px;}
+  .kicker{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--accent); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px; display:flex; align-items:center;}
+  .step-tag{font-size:44px; font-family:'Bebas Neue',sans-serif; color:transparent; -webkit-text-stroke:1px var(--line); margin-right:16px; letter-spacing:0;}
+  .head-row h2{font-family:'Bebas Neue',sans-serif; font-size:clamp(38px,6vw,80px); letter-spacing:0.01em; line-height:0.95;}
+  .head-row .sub{color:var(--grey); max-width:340px; font-size:14px; line-height:1.6;}
 
-.hero-bottom {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-top: 8px;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+  /* SERVICES */
+  .serv-grid{display:grid; grid-template-columns:1fr; gap:1px; background:var(--line); border:1px solid var(--line);}
+  @media(min-width:760px){.serv-grid{grid-template-columns:repeat(4,1fr);}}
+  .serv-card{background:var(--black); position:relative; min-height:280px; display:flex; flex-direction:column; justify-content:flex-end; padding:28px; isolation:isolate; overflow:hidden; width:100%; text-align:left; border:none; cursor:pointer; font-family:inherit;}
+  .serv-card .sbg{position:absolute; inset:0; z-index:-2; background-size:cover; background-position:center; filter:grayscale(1) contrast(1.1) brightness(0.55); transition:filter .5s ease, transform .6s ease;}
+  .serv-card:hover .sbg{filter:grayscale(0) contrast(1.05) brightness(0.6); transform:scale(1.05);}
+  .serv-card::after{content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg, rgba(10,10,11,0.1), rgba(10,10,11,0.9));}
+  .serv-num{font-family:'JetBrains Mono',monospace; color:var(--accent); font-size:12px;}
+  .serv-name{font-family:'Bebas Neue',sans-serif; font-size:27px; letter-spacing:0.01em; margin-top:8px;}
+  .serv-card p{color:var(--grey); font-size:13.5px; line-height:1.6; margin-top:10px;}
+  .serv-tag{font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--accent); text-transform:uppercase; letter-spacing:0.05em; margin-top:14px; display:block;}
 
-.hero-departure {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-}
+  /* GALLERY — tabs + duotone qui se révèle en couleur au survol */
+  .gallery{background:var(--carbon);}
+  .gtabs{display:flex; flex-wrap:wrap; gap:0; margin-bottom:44px; border:1px solid var(--line); width:fit-content;}
+  .gtab{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.04em; padding:13px 20px; background:none; color:var(--grey); border:none; border-right:1px solid var(--line); text-transform:uppercase; cursor:pointer;}
+  .gtab:last-child{border-right:none;}
+  .gtab.active{background:var(--accent); color:var(--white);}
+  .gtab:hover:not(.active){color:var(--white); background:rgba(245,244,242,0.05);}
+  .g-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:2px;}
+  @media(min-width:700px){.g-grid{grid-template-columns:repeat(4,1fr);}}
+  .g-item{position:relative; aspect-ratio:1; overflow:hidden; background:var(--black); isolation:isolate; cursor:pointer;}
+  .g-item img{width:100%; height:100%; object-fit:cover; filter:grayscale(1) contrast(1.15); transition:filter .5s ease, transform .5s ease;}
+  .g-item:hover img{filter:grayscale(0) contrast(1.05); transform:scale(1.06);}
+  .g-item .g-label{position:absolute; bottom:0; left:0; right:0; padding:14px; background:linear-gradient(0deg, rgba(10,10,11,0.92), transparent); font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--white); text-transform:uppercase; letter-spacing:0.03em; transform:translateY(6px); opacity:0.85; transition:transform .3s ease;}
+  .g-item:hover .g-label{transform:translateY(0); opacity:1;}
 
-.hero-time {
-  font-family:'Bebas Neue',sans-serif;
-  font-size: clamp(32px, 7vw, 52px);
-  letter-spacing: 3px;
-  color: #ffffff;
-  line-height: 1;
-}
+  /* PPF */
+  .ppf{display:grid; grid-template-columns:1fr; gap:44px;}
+  @media(min-width:900px){.ppf{grid-template-columns:1fr 1fr; align-items:center;}}
+  .ppf-photo{aspect-ratio:3/4; background-size:cover; background-position:center; border:1px solid var(--line);}
+  .cert-row{display:flex; gap:16px; margin-top:30px; flex-wrap:wrap;}
+  .cert{border:1px solid var(--line); padding:14px 18px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--grey); text-transform:uppercase; letter-spacing:0.04em;}
+  .cert b{color:var(--accent); display:block; font-size:13px; margin-bottom:4px;}
 
-.hero-countdown {
-  font-family:'Bebas Neue',sans-serif;
-  font-size: clamp(24px, 5vw, 38px);
-  letter-spacing: 2px;
-  color: var(--red);
-  line-height: 1;
-}
-.hero-countdown.imminent {
-  color: var(--red);
-  font-size: clamp(28px, 6vw, 44px);
-}
+  /* HISTOIRE */
+  .histoire{display:grid; grid-template-columns:1fr; gap:44px;}
+  @media(min-width:900px){.histoire{grid-template-columns:1fr 1fr; align-items:center;}}
+  .histoire-photo{aspect-ratio:16/10; background-size:cover; background-position:center; border:1px solid var(--line); filter:grayscale(0.3) contrast(1.05);}
+  .histoire p{color:var(--grey); font-size:15.5px; line-height:1.75; margin-bottom:16px;}
+  .histoire p b{color:var(--white);}
 
-.hero-next-label {
-  font-family:'DM Mono',monospace; font-size:9px;
-  letter-spacing:3px; text-transform:uppercase;
-  color:var(--muted); align-self:flex-end; margin-bottom:4px;
-}
+  /* STATS */
+  .stats{display:grid; grid-template-columns:repeat(2,1fr); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  @media(min-width:760px){.stats{grid-template-columns:repeat(4,1fr);}}
+  .stat{padding:34px 5%; border-right:1px solid var(--line);}
+  .stat:last-child{border-right:none;}
+  .stat .num{font-family:'Bebas Neue',sans-serif; font-size:46px; color:var(--accent); line-height:1;}
+  .stat .lbl{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--grey); text-transform:uppercase; letter-spacing:0.05em; margin-top:8px;}
 
-/* ── TIMELINE ── */
-.timeline-wrap {
-  padding: 20px 20px 0;
-  max-width:1140px; margin:0 auto;
-}
-.section-label {
-  font-family:'DM Mono',monospace; font-size:9px;
-  letter-spacing:3px; text-transform:uppercase;
-  color:var(--muted); margin-bottom:10px;
-  display:flex; align-items:center; gap:8px;
-}
-.section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+  /* CONTACT */
+  .contact-wrap{display:grid; grid-template-columns:1fr; gap:50px;}
+  @media(min-width:900px){.contact-wrap{grid-template-columns:1fr 1fr;}}
+  .contact-block{border-left:2px solid var(--accent); padding-left:24px; margin-bottom:34px;}
+  .contact-block h3{font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:0.01em; margin-bottom:10px;}
+  .contact-block p, .contact-block a{color:var(--grey); font-size:14.5px; line-height:1.8; text-decoration:none;}
+  .contact-block a{color:var(--accent);}
+  form{display:flex; flex-direction:column; gap:16px;}
+  label{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--grey); display:block; margin-bottom:6px;}
+  input, select, textarea{width:100%; border:1px solid var(--line); background:var(--panel); padding:14px; font-family:'Inter',sans-serif; font-size:14px; color:var(--white);}
+  input:focus, textarea:focus{outline:1px solid var(--accent);}
+  textarea{resize:vertical; min-height:110px;}
+  .form-msg{display:none; background:var(--accent); color:var(--white); padding:16px; font-size:13px; font-weight:600; margin-top:4px;}
+  .form-msg.show{display:block;}
 
-.timeline-container {
-  position: relative;
-  height: 64px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  overflow: visible;
-  margin-bottom: 4px;
-}
+  .wed{display:grid; grid-template-columns:1fr; gap:1px; background:var(--line); border:1px solid var(--line);}
+  @media(min-width:860px){.wed{grid-template-columns:1fr 1fr;}}
+  .wed-card{background:var(--black); padding:38px 32px;}
+  .wed-card img{width:100%; border:1px solid var(--line); margin-top:20px; filter:grayscale(0.15);}
+  .wed-tag{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent); text-transform:uppercase; letter-spacing:0.05em;}
+  .wed-card h3{font-family:'Bebas Neue',sans-serif; font-size:30px; margin:10px 0 14px;}
+  .wed-card p{color:var(--grey); font-size:14.5px; line-height:1.7; margin-bottom:12px;}
 
-/* Route parcourue */
-.timeline-road {
-  position: absolute;
-  top: 50%; transform: translateY(-50%);
-  left: 0; right: 0; height: 4px;
-  background: var(--border);
-  border-radius: 2px;
-}
-.timeline-progress {
-  position: absolute;
-  top: 0; left: 0; height: 100%;
-  background: linear-gradient(90deg, var(--muted2), var(--accent));
-  border-radius: 2px;
-  transition: width 1s linear;
-}
+  .note{border-left:2px solid var(--accent); padding:16px 20px; margin-top:26px; background:var(--panel); font-size:13px; color:var(--grey); line-height:1.6;}
+  .note b{color:var(--white);}
 
-/* Camion 🚚 */
-.timeline-truck {
-  position: absolute;
-  top: 50%; transform: translate(-50%, -50%);
-  font-size: 22px;
-  z-index: 10;
-  transition: left 1s linear;
-  filter: drop-shadow(0 0 8px rgba(212,240,74,0.6));
-}
+  .extra-list{display:grid; grid-template-columns:1fr; gap:10px; margin-top:36px;}
+  @media(min-width:700px){.extra-list{grid-template-columns:repeat(3,1fr);}}
+  .extra-item{border:1px solid var(--line); padding:16px 18px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--grey); text-transform:uppercase; letter-spacing:0.03em;}
+  .extra-item b{color:var(--white); display:block; font-size:13px; margin-bottom:3px; text-transform:none; font-family:'Inter',sans-serif; font-weight:600;}
 
-/* Points de départ */
-.timeline-point {
-  position: absolute;
-  top: 50%; transform: translate(-50%, -50%);
-  z-index: 5;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.timeline-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  border: 2px solid var(--bg);
-}
-.timeline-dot.past { background: var(--muted2); }
-.timeline-dot.next { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
-.timeline-dot.future { background: var(--border); }
+  footer{background:var(--black); padding:34px 5%; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--grey); border-top:1px solid var(--line);}
 
-.timeline-time {
-  font-family:'Bebas Neue',sans-serif;
-  font-size: 13px;
-  letter-spacing: 1px;
-  white-space: nowrap;
-  color: var(--muted);
-  /* Tooltip */
-  position: absolute;
-  top: -28px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  padding: 2px 7px;
-  border-radius: 3px;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity .15s;
-  z-index: 20;
-}
-.timeline-time.past { color: var(--muted2); }
-.timeline-time.next { color: var(--accent); }
-.timeline-point:hover .timeline-time,
-.timeline-point.tapped .timeline-time { opacity: 1; }
+  .reveal{opacity:0; transform:translateY(28px); transition:opacity .7s cubic-bezier(.16,.8,.3,1), transform .7s cubic-bezier(.16,.8,.3,1);}
+  .reveal.in-view{opacity:1; transform:none;}
 
-/* ── SEARCH ── */
-.search-wrap { padding:16px 20px 8px; max-width:1140px; margin:0 auto; }
-.search-box {
-  display:flex; align-items:center; gap:10px;
-  background:var(--surface); border:2px solid var(--border);
-  border-radius:4px; padding:0 14px;
-  transition: border-color .15s, box-shadow .15s;
-}
-.search-box:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(212,240,74,0.1);
-}
-.search-icon { font-size:16px; color:var(--muted); flex-shrink:0; }
-#searchInput {
-  flex:1; border:none; outline:none; background:transparent;
-  font-family:'DM Sans',sans-serif; font-size:17px; font-weight:500;
-  color:var(--text); padding:14px 0;
-}
-#searchInput::placeholder { color:var(--muted); font-weight:400; }
-.search-clear {
-  background:var(--red); border:none; cursor:pointer;
-  color:white; font-size:11px; padding:5px 10px;
-  border-radius:2px; display:none; font-weight:600;
-  font-family:'DM Mono',monospace; letter-spacing:1px;
-  transition: background .15s;
-}
-.search-clear:hover { background:#c03030; }
+  @media (prefers-reduced-motion: reduce){
+    .hero-bg{animation:none;}
+    h1 .line span, .hero-sub, .hero-actions{animation:none; opacity:1; transform:none;}
+    .reveal{opacity:1; transform:none; transition:none;}
+  }
 
-#searchResults {
-  background:var(--surface); border:1px solid var(--border);
-  border-radius:4px; margin-top:6px; overflow:hidden; display:none;
-}
-.result-item {
-  padding:14px 18px; border-bottom:1px solid var(--border);
-  transition:background .1s; cursor:pointer;
-}
-.result-item:last-child { border-bottom:none; }
-.result-item:hover { background:var(--surface2); }
-.result-garage {
-  font-weight:600; font-size:16px; margin-bottom:8px;
-  color: var(--text);
-}
+  /* ===== Adaptation tactile : le survol n'existe pas au doigt, donc pas de duotone caché ===== */
+  @media (pointer: coarse){
+    .g-item img{filter:none;}
+    .g-item .g-label{transform:none; opacity:1;}
+    .serv-card .sbg{filter:grayscale(0) contrast(1.05) brightness(0.55);}
+  }
 
-/* Prochain départ dans la fiche */
-.result-next {
-  display:flex; align-items:center; gap:12px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius:3px; padding:10px 14px; margin-bottom:8px;
-}
-.result-next-label {
-  font-family:'DM Mono',monospace; font-size:9px;
-  letter-spacing:2px; color:var(--muted); text-transform:uppercase;
-}
-.result-next-time {
-  font-family:'Bebas Neue',sans-serif; font-size:34px;
-  letter-spacing:2px; color:var(--accent); line-height:1;
-}
-.result-next-who {
-  font-family:'DM Mono',monospace; font-size:11px; color:var(--muted);
-  margin-top:2px;
-}
-.result-next-countdown {
-  margin-left:auto;
-  font-family:'Bebas Neue',sans-serif; font-size:30px;
-  letter-spacing:1px; color:var(--orange); line-height:1;
-}
-.result-next-countdown.urgent { color:var(--red); animation:flashName 1s infinite; }
-.result-next-countdown.verysoon { color:var(--orange); }
+  /* ===== NAVIGATION MOBILE — hamburger + panneau plein écran ===== */
+  .burger{display:flex; align-items:center; justify-content:center; width:38px; height:38px; background:none; border:1px solid var(--line); color:var(--white); cursor:pointer;}
+  .burger svg{width:16px; height:16px;}
+  @media(min-width:860px){.burger{display:none;}}
+  @media(max-width:400px){
+    .call-btn{padding:9px 12px; font-size:11px;}
+    .logo{font-size:20px;}
+  }
 
-.result-carriers { display:flex; flex-direction:column; gap:5px; }
-.result-carrier-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .mobile-panel{
+    position:fixed; inset:0; z-index:200; background:var(--black);
+    display:flex; flex-direction:column; padding:90px 8% 40px;
+    transform:translateX(100%); transition:transform .35s cubic-bezier(.16,.8,.3,1);
+  }
+  .mobile-panel.open{transform:translateX(0);}
+  .mobile-panel a{
+    font-family:'Bebas Neue',sans-serif; font-size:34px; color:var(--white); text-decoration:none;
+    padding:16px 0; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:16px;
+  }
+  .mobile-panel a .n{font-family:'JetBrains Mono',monospace; font-size:14px; color:var(--accent);}
+  .mobile-panel a.active{color:var(--accent);}
+  .mobile-close{position:absolute; top:18px; right:5%; width:38px; height:38px; background:none; border:1px solid var(--line); color:var(--white); font-size:20px; cursor:pointer;}
+  .mobile-panel .call-btn{margin-top:auto; text-align:center;}
+  @media(min-width:860px){.mobile-panel{display:none;}}
 
-.carrier-pill {
-  display:inline-flex; align-items:center;
-  font-family:'DM Mono',monospace; font-size:10px; font-weight:500;
-  padding:3px 9px; border-radius:2px; letter-spacing:.5px;
-}
-.pill-serge    { background:#3d1a18; color:#f07060; border:1px solid #5a2820; }
-.pill-lande    { background:#18263d; color:#6090f0; border:1px solid #20386a; }
-.pill-pb       { background:#18301f; color:#50d080; border:1px solid #205030; }
-.pill-bearn    { background:#3d2c10; color:#d09040; border:1px solid #5a4020; }
-.pill-hendaye  { background:#2c1a3d; color:#9060e0; border:1px solid #40286a; }
-.pill-ace      { background:#2a2a2a; color:#c0c0c0; border:1px solid #444; }
+  /* ===== NAVIGATION MOBILE — barre d'onglets fixe en bas ===== */
+  .tabbar{
+    display:flex; position:fixed; bottom:0; left:0; right:0; z-index:95;
+    background:rgba(10,10,11,0.94); backdrop-filter:blur(10px); border-top:1px solid var(--line);
+    padding-bottom:env(safe-area-inset-bottom, 0);
+  }
+  @media(min-width:860px){.tabbar{display:none;}}
+  .tabbar button{
+    flex:1; background:none; border:none; color:var(--grey); padding:11px 4px 9px;
+    display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;
+    font-family:'JetBrains Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.02em;
+    position:relative;
+  }
+  .tabbar button .tick{width:4px; height:4px; border-radius:50%; background:transparent; transition:background .2s ease;}
+  .tabbar button.active{color:var(--white);}
+  .tabbar button.active .tick{background:var(--accent);}
+  body{padding-bottom:56px;}
+  @media(min-width:860px){body{padding-bottom:0;}}
 
-.dep-times { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); }
-.dep-status { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.5px; }
-.dep-status.s-soon { color:var(--orange); font-weight:600; }
-.dep-status.s-urgent { color:var(--red); font-weight:600; animation:flashName 1s infinite; }
-.dep-status.s-past { color:var(--muted2); }
-.dep-status.s-upcoming { color:var(--blue); }
-
-.no-result { padding:18px; color:var(--muted); font-style:italic; text-align:center; }
-
-/* ── TOP ── */
-.top-section { padding:8px 20px 16px; max-width:1140px; margin:0 auto; }
-#topGarages { display:flex; flex-wrap:wrap; gap:6px; }
-.top-chip {
-  background:var(--surface); border:1px solid var(--border);
-  border-radius:3px; padding:5px 11px; font-size:12px; font-weight:500;
-  cursor:pointer; transition:all .12s; display:flex; align-items:center; gap:5px;
-  color: var(--text);
-}
-.top-chip:hover { border-color:var(--accent); color:var(--accent); }
-.top-chip .chip-count {
-  background:var(--surface2); color:var(--muted);
-  border-radius:2px; font-family:'DM Mono',monospace;
-  font-size:9px; padding:1px 5px;
-}
-.top-chip.urgent {
-  border-color:var(--orange); color:var(--orange);
-  animation: urgentChip 1.5s infinite;
-}
-@keyframes urgentChip { 0%,100%{box-shadow:0 0 0 0 rgba(245,144,32,0)} 50%{box-shadow:0 0 8px 2px rgba(245,144,32,0.3)} }
-
-/* ── TRANSPORTEURS (liste horizontale) ── */
-.carriers-section { padding:0 20px 40px; max-width:1140px; margin:0 auto; }
-.carriers-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  overflow: hidden;
-}
-.carrier-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 18px;
-  border-bottom: 1px solid var(--border);
-  transition: background .15s;
-  position: relative;
-}
-.carrier-row:last-child { border-bottom: none; }
-.carrier-row::before {
-  content:'';
-  position:absolute; left:0; top:0; bottom:0; width:3px;
-  background: transparent;
-  transition: background .3s;
-}
-.carrier-row.c-active::before { background: transparent; }
-.carrier-row.c-done { opacity:.4; }
-@keyframes flashBar { 0%,100%{opacity:1} 50%{opacity:.3} }
-@keyframes flashRed { 0%,100%{opacity:1} 50%{opacity:.35} }
-
-
-.carrier-row-name {
-  font-weight: 600;
-  font-size: 14px;
-  min-width: 160px;
-  flex-shrink: 0;
-}
-.carrier-row.c-active .carrier-row-name { color: var(--text); }
-.carrier-row.c-soon .carrier-row-name { color: var(--text); }
-.carrier-row.c-imminent .carrier-row-name { color: var(--text); }
-
-.carrier-row-deps {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  flex: 1;
-}
-.dep-pill {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 16px;
-  letter-spacing: 1px;
-  padding: 2px 8px;
-  border-radius: 3px;
-  border: 1px solid var(--border);
-  color: var(--muted);
-  background: var(--surface2);
-  transition: all .3s;
-}
-.dep-pill.dep-past    { color: var(--muted2); border-color: transparent; background: transparent; text-decoration: line-through; }
-.dep-pill.dep-future  { color: var(--muted);  border-color: var(--border); background: var(--surface2); }
-.dep-pill.dep-THE-ONE { 
-  color: #fff !important; 
-  border-color: var(--red) !important; 
-  background: var(--red) !important; 
-  font-weight: 700;
-  animation: flashRedBg .8s infinite;
-}
-@keyframes flashRedBg { 
-  0%,100%{ background: var(--red); color: #fff; border-color: var(--red); } 
-  50%{ background: transparent; color: var(--red); border-color: var(--red); } 
-}
-
-.carrier-row-status {
-  font-family:'DM Mono',monospace; font-size:10px;
-  color:var(--muted); letter-spacing:.5px; min-width:120px; text-align:right;
-  flex-shrink: 0;
-}
-.carrier-row.c-active .carrier-row-status { color: var(--green); }
-.carrier-row.c-soon .carrier-row-status { color: var(--orange); }
-.carrier-row.c-imminent .carrier-row-status { color: var(--red); }
-
-.carrier-row-count {
-  font-family:'DM Mono',monospace; font-size:11px;
-  color: var(--muted); min-width: 70px; text-align:right; flex-shrink:0;
-  letter-spacing: .5px;
-}
-.carrier-row-next {
-  flex: 1;
-}
-.next-dep-time {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 28px;
-  letter-spacing: 2px;
-  line-height: 1;
-}
-.next-dep-time.dep-next     { color: var(--accent); }
-.next-dep-time.dep-soon     { color: var(--orange); animation: flashBar 1s infinite; }
-.next-dep-time.dep-imminent { color: var(--red);    animation: flashBar .7s infinite; }
-.next-dep-time.dep-done     { color: var(--muted2); font-size: 16px; }
-
-/* Accordion */
-.carrier-row {
-  cursor: pointer;
-  user-select: none;
-}
-.carrier-row-chevron {
-  font-size: 11px;
-  color: var(--muted);
-  transition: transform .25s;
-  flex-shrink: 0;
-  margin-left: 4px;
-}
-.carrier-row.open .carrier-row-chevron { transform: rotate(180deg); }
-
-.carrier-garages-panel {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height .3s ease;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface2);
-}
-.carrier-garages-panel.open {
-  max-height: 600px;
-}
-.carrier-garages-inner {
-  padding: 10px 18px 14px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-.garage-name-tag {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  padding: 3px 9px;
-  border-radius: 3px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  white-space: nowrap;
-  cursor: pointer;
-  transition: border-color .15s, color .15s;
-}
-.garage-name-tag:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-.garage-name-tag.imminent {
-  color: var(--red);
-  border-color: rgba(232,64,64,0.4);
-  background: var(--surface);
-  font-weight: 600;
-}
-.garage-name-tag.soon {
-  color: var(--orange);
-  border-color: rgba(245,144,32,0.4);
-  background: var(--surface);
-  font-weight: 600;
-}
-
-/* ── TOAST ── */
-.toast {
-  position:fixed; bottom:20px; right:16px;
-  background:var(--surface); color:var(--text);
-  border:1px solid var(--border);
-  border-left:4px solid var(--orange);
-  border-radius:4px; padding:12px 16px;
-  font-family:'DM Sans',sans-serif; font-size:13px;
-  box-shadow:0 8px 24px rgba(0,0,0,.4);
-  z-index:1000; max-width:280px;
-  transform:translateX(120%); transition:transform .3s;
-}
-.toast.show { transform:translateX(0); }
-.toast.urgent { border-left-color:var(--red); }
-.toast-title { font-weight:600; font-size:14px; margin-bottom:3px; }
-.toast-body { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:.5px; }
-
-@media(max-width:600px){
-  .carrier-row-status { display:none; }
-  .carrier-row-name { min-width:110px; font-size:13px; }
-  .carrier-row-count { min-width:50px; font-size:10px; }
-  .hero-clock { font-size:16px; }
-}
-
-/* ── ADMIN PANEL ── */
-.admin-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
-  z-index: 500;
-  overflow-y: auto;
-  padding: 20px;
-}
-.admin-overlay.show { display: block; }
-.admin-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 24px;
-}
-.admin-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 28px;
-  letter-spacing: 3px;
-  color: var(--accent);
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.admin-close {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--muted);
-  cursor: pointer;
-  padding: 4px 10px;
-  border-radius: 3px;
-  font-size: 16px;
-}
-.admin-close:hover { border-color: var(--red); color: var(--red); }
-
-.admin-section-title {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin: 20px 0 10px;
-}
-.admin-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-.admin-field label {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 1px;
-  color: var(--muted);
-  text-transform: uppercase;
-}
-.admin-field input, .admin-field select {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 10px 12px;
-  color: var(--text);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-  outline: none;
-  width: 100%;
-}
-.admin-field input:focus, .admin-field select:focus {
-  border-color: var(--accent);
-}
-.admin-carriers-check {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.admin-carrier-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 8px 12px;
-}
-.admin-carrier-row input[type=checkbox] {
-  width: 16px; height: 16px;
-  accent-color: var(--accent);
-  flex-shrink: 0;
-}
-.admin-carrier-label {
-  font-size: 13px;
-  font-weight: 500;
-  flex: 1;
-}
-.admin-carrier-deps {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 4px 8px;
-  color: var(--text);
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  width: 160px;
-  outline: none;
-}
-.admin-carrier-deps:focus { border-color: var(--accent); }
-.admin-carrier-deps:disabled { opacity: 0.3; }
-
-.admin-btn {
-  background: var(--accent);
-  color: var(--bg);
-  border: none;
-  border-radius: 3px;
-  padding: 12px 20px;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 18px;
-  letter-spacing: 2px;
-  cursor: pointer;
-  width: 100%;
-  margin-top: 16px;
-  transition: opacity .15s;
-}
-.admin-btn:hover { opacity: .85; }
-.admin-btn.danger { background: var(--red); color: #fff; }
-
-.admin-garage-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-height: 300px;
-  overflow-y: auto;
-  margin-top: 8px;
-}
-.admin-garage-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 8px 12px;
-  font-size: 13px;
-}
-.admin-garage-item button {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--muted);
-  cursor: pointer;
-  padding: 2px 8px;
-  border-radius: 2px;
-  font-size: 11px;
-  font-family: 'DM Mono', monospace;
-}
-.admin-garage-item button:hover { border-color: var(--red); color: var(--red); }
-.admin-garage-item .btn-edit { margin-right: 4px; }
-.admin-garage-item .btn-edit:hover { border-color: var(--accent); color: var(--accent); }
-
-/* Edit modal */
-.admin-edit-modal {
-  display: none;
-  background: var(--surface2);
-  border: 1px solid var(--accent);
-  border-radius: 6px;
-  padding: 16px;
-  margin-top: 8px;
-}
-.admin-edit-modal.show { display: block; }
-
-.admin-search {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 8px 12px;
-  color: var(--text);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-  outline: none;
-  width: 100%;
-  margin-bottom: 8px;
-}
-.admin-search:focus { border-color: var(--accent); }
-
-.admin-msg {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  padding: 8px 12px;
-  border-radius: 3px;
-  margin-top: 8px;
-  display: none;
-}
-.admin-msg.ok { background: rgba(64,212,144,0.1); color: var(--green); border: 1px solid var(--green); display: block; }
-.admin-msg.err { background: rgba(232,64,64,0.1); color: var(--red); border: 1px solid var(--red); display: block; }
-
-/* Login */
-.admin-login {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.admin-login input {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 12px;
-  color: var(--text);
-  font-size: 16px;
-  outline: none;
-  text-align: center;
-  letter-spacing: 3px;
-}
-.admin-login input:focus { border-color: var(--accent); }
-
+  /* ===== LIGHTBOX ===== */
+  .lightbox{
+    position:fixed; inset:0; z-index:300; background:rgba(10,10,11,0.96);
+    display:flex; align-items:center; justify-content:center; padding:24px;
+    opacity:0; pointer-events:none; transition:opacity .25s ease;
+  }
+  .lightbox.open{opacity:1; pointer-events:auto;}
+  .lightbox img{max-width:min(90vw, 1100px); max-height:76vh; width:auto; height:auto; border:1px solid var(--line); object-fit:contain;}
+  .lightbox-caption{position:absolute; bottom:8%; left:0; right:0; text-align:center; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--grey); text-transform:uppercase; letter-spacing:0.04em;}
+  .lightbox-close{position:absolute; top:24px; right:24px; width:44px; height:44px; background:none; border:1px solid var(--line); color:var(--white); font-size:20px; cursor:pointer;}
+  .lightbox-nav{position:absolute; top:50%; transform:translateY(-50%); width:48px; height:48px; background:rgba(245,244,242,0.06); border:1px solid var(--line); color:var(--white); font-size:22px; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .lightbox-nav:hover{background:var(--accent); border-color:var(--accent);}
+  .lightbox-prev{left:16px;} .lightbox-next{right:16px;}
+  @media(max-width:640px){
+    .lightbox-nav{width:40px; height:40px; font-size:18px;}
+    .lightbox-close{width:38px; height:38px; top:14px; right:14px;}
+  }
 </style>
 </head>
 <body>
 
-<div class="toast" id="toast">
-  <div class="toast-title" id="toastTitle"></div>
-  <div class="toast-body" id="toastBody"></div>
+<div class="route-rail" id="routeRail">
+  <div class="route-track"><div class="route-fill" id="routeFill"></div></div>
+  <button class="route-stop" data-target="services"><span class="dot"></span><span class="route-label">01 · Services</span></button>
+  <button class="route-stop" data-target="realisations"><span class="dot"></span><span class="route-label">02 · Réalisations</span></button>
+  <button class="route-stop" data-target="mariage"><span class="dot"></span><span class="route-label">03 · Mariage & Événement</span></button>
+  <button class="route-stop" data-target="histoire"><span class="dot"></span><span class="route-label">04 · Histoire</span></button>
+  <button class="route-stop" data-target="contact"><span class="dot"></span><span class="route-label">05 · Contact</span></button>
 </div>
 
-<div class="imminent-banner" id="imminentBanner"></div>
+<header>
+  <div class="logo"><img src="https://static.wixstatic.com/media/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png/v1/fill/w_120,h_133,q_90,enc_auto/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png" alt="Logo ABS-Cover">ABS<span>-</span>COVER</div>
+  <nav>
+    <a href="#services" data-nav="services">01 · Services</a>
+    <a href="#realisations" data-nav="realisations">02 · Réalisations</a>
+    <a href="#mariage" data-nav="mariage">03 · Mariage</a>
+    <a href="#histoire" data-nav="histoire">04 · Histoire</a>
+    <a href="#contact" data-nav="contact">05 · Contact</a>
+  </nav>
+  <div style="display:flex; gap:10px; align-items:center;">
+    <a class="call-btn" href="tel:0631812421">06 31 81 24 21</a>
+    <button class="burger" id="burgerBtn" aria-label="Ouvrir le menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</header>
 
-<div class="hero">
-  <div class="hero-clock" id="heroClock">--:--:--</div>
-  <div class="hero-label">Prochain départ</div>
-  <div class="hero-name" id="heroName">—</div>
-  <div class="hero-bottom">
-    <div class="hero-departure">
-      <div class="hero-time" id="heroTime">—</div>
-      <div class="hero-countdown" id="heroCountdown"></div>
+<div class="mobile-panel" id="mobilePanel">
+  <button class="mobile-close" id="mobileClose" aria-label="Fermer le menu">✕</button>
+  <div class="logo" style="margin-bottom:20px;"><img src="https://static.wixstatic.com/media/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png/v1/fill/w_120,h_133,q_90,enc_auto/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png" alt="Logo ABS-Cover">ABS<span>-</span>COVER</div>
+  <a href="#services" data-nav-mobile="services"><span class="n">01</span> Services</a>
+  <a href="#realisations" data-nav-mobile="realisations"><span class="n">02</span> Réalisations</a>
+  <a href="#mariage" data-nav-mobile="mariage"><span class="n">03</span> Mariage</a>
+  <a href="#histoire" data-nav-mobile="histoire"><span class="n">04</span> Histoire</a>
+  <a href="#contact" data-nav-mobile="contact"><span class="n">05</span> Contact</a>
+  <a class="btn fill call-btn" href="tel:0631812421" style="font-family:'JetBrains Mono',monospace; font-size:15px; padding:16px;">Appeler : 06 31 81 24 21</a>
+</div>
+
+<div class="tabbar" id="tabbar">
+  <button data-target="services"><span class="tick"></span>Services</button>
+  <button data-target="realisations"><span class="tick"></span>Réal.</button>
+  <button data-target="mariage"><span class="tick"></span>Mariage</button>
+  <button data-target="histoire"><span class="tick"></span>Histoire</button>
+  <button data-target="contact"><span class="tick"></span>Contact</button>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose" aria-label="Fermer">✕</button>
+  <button class="lightbox-nav lightbox-prev" id="lightboxPrev" aria-label="Précédent">‹</button>
+  <img id="lightboxImg" src="" alt="">
+  <button class="lightbox-nav lightbox-next" id="lightboxNext" aria-label="Suivant">›</button>
+  <div class="lightbox-caption" id="lightboxCaption"></div>
+</div>
+
+<section class="hero" id="accueil">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Landes · Pays Basque · depuis 2013</div>
+    <h1><span class="line"><span>Sublimez</span></span><span class="line"><span>votre véhicule</span></span></h1>
+    <p class="hero-sub">Vitres teintées, protection carrosserie PPF, covering et impression numérique. Poseur certifié Hexis BodyFence, un travail exigeant pour particuliers et professionnels.</p>
+    <div class="hero-actions">
+      <a class="btn fill" href="tel:0631812421">Appeler pour un devis</a>
+      <a class="btn" href="#services">Voir nos prestations</a>
     </div>
-    <div class="hero-next-label" id="heroSub"></div>
+  </div>
+  <button class="scroll-hint" id="scrollHint" style="background:none; border:none; cursor:pointer;">Découvrir le parcours</button>
+</section>
+
+<div class="strip">
+  <div class="strip-track">
+    <span>★ VITRES TEINTÉES AUTO & BÂTIMENT</span>
+    <span>★ PROTECTION CARROSSERIE PPF</span>
+    <span>★ COVERING / WRAPPING</span>
+    <span>★ IMPRESSION NUMÉRIQUE TOUS SUPPORTS</span>
+    <span>★ VITRES TEINTÉES AUTO & BÂTIMENT</span>
+    <span>★ PROTECTION CARROSSERIE PPF</span>
+    <span>★ COVERING / WRAPPING</span>
+    <span>★ IMPRESSION NUMÉRIQUE TOUS SUPPORTS</span>
   </div>
 </div>
 
-<div class="timeline-wrap">
-  <div class="section-label">Journée en cours</div>
-  <div class="timeline-container" id="timelineContainer">
-    <div class="timeline-road">
-      <div class="timeline-progress" id="timelineProgress"></div>
-    </div>
-    <div class="timeline-truck" id="timelineTruck">🚚</div>
-    <div id="timelinePoints"></div>
+<section id="services">
+  <div class="head-row">
+    <div style="display:flex; align-items:baseline;"><span class="step-tag">01</span><div><span class="kicker">Nos prestations</span><h2>Quatre savoir-faire</h2></div></div>
+    <p class="sub">Demande de tarif par téléphone — devis sur rendez-vous pour covering et impression.</p>
   </div>
-</div>
-
-<div class="search-wrap">
-  <div class="search-box">
-    <span class="search-icon">🔍</span>
-    <input type="text" id="searchInput" placeholder="Rechercher un garage..." autocomplete="off" autocorrect="off" spellcheck="false">
-    <button class="search-clear" id="searchClear">✕ EFFACER</button>
+  <div class="serv-grid">
+    <button class="serv-card" data-goto="vitres-auto">
+      <div class="sbg" style="background-image:url('https://static.wixstatic.com/media/81cf68_bcb078de360f4faebc8554a7d84950ea~mv2.jpg/v1/fill/w_700,h_600,q_75,enc_auto/81cf68_bcb078de360f4faebc8554a7d84950ea~mv2.jpg');"></div>
+      <span class="serv-num mono">01</span>
+      <div class="serv-name">Vitres teintées</div>
+      <p>Auto & bâtiment. Film céramique haut de gamme, retient 99% des UV et jusqu'à 80% de la chaleur. Garantie 15 ans. Teinte légale à 80% de lumière entrante à l'avant.</p>
+      <span class="serv-tag">Hexis — France · voir les réalisations →</span>
+    </button>
+    <button class="serv-card" data-goto-section="ppf">
+      <div class="sbg" style="background-image:url('https://static.wixstatic.com/media/81cf68_5cd9948e121c4700b534f52cedf7e12f~mv2.jpg/v1/fill/w_700,h_600,q_75,enc_auto/81cf68_5cd9948e121c4700b534f52cedf7e12f~mv2.jpg');"></div>
+      <span class="serv-num mono">02</span>
+      <div class="serv-name">Protection PPF</div>
+      <p>Film transparent autocicatrisant contre les agressions du quotidien. Pose certifiée Hexis BodyFence.</p>
+      <span class="serv-tag">Poseur agréé certifié · en savoir plus →</span>
+    </button>
+    <button class="serv-card" data-goto="covering">
+      <div class="sbg" style="background-image:url('https://static.wixstatic.com/media/81cf68_669c005a8495493383ac706070f9d03a~mv2.png/v1/fill/w_700,h_600,q_75,enc_auto/81cf68_669c005a8495493383ac706070f9d03a~mv2.png');"></div>
+      <span class="serv-num mono">03</span>
+      <div class="serv-name">Covering</div>
+      <p>Total ou partiel, uni ou imprimé, 100% personnalisable. Bi-ton, décoratif, changement complet de teinte.</p>
+      <span class="serv-tag">Sur devis · voir les réalisations →</span>
+    </button>
+    <button class="serv-card" data-goto="impression">
+      <div class="sbg" style="background-image:url('https://static.wixstatic.com/media/81cf68_72c2c200e8c843bdb30e46e3251bf28a~mv2.png/v1/fill/w_700,h_600,q_75,enc_auto/81cf68_72c2c200e8c843bdb30e46e3251bf28a~mv2.png');"></div>
+      <span class="serv-num mono">04</span>
+      <div class="serv-name">Impression</div>
+      <p>Roll-up, enseignes, stickers XXL, bâches, papier peint, sol antidérapant — création et pose incluses.</p>
+      <span class="serv-tag">Service création inclus · voir les réalisations →</span>
+    </button>
   </div>
-  <div id="searchResults"></div>
-</div>
 
-<div style="text-align:center;padding:4px 20px 0;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px">
-  🔍 <span id="totalSearchCount">—</span> recherches effectuées
-</div>
+  <div class="extra-list">
+    <div class="extra-item"><b>Anti vis-à-vis</b>Film occultant</div>
+    <div class="extra-item"><b>Anti-graffitis</b>Film de protection</div>
+    <div class="extra-item"><b>Film sécurité</b>Anti-effraction</div>
+    <div class="extra-item"><b>Décoration / Publicité</b>Sur tous supports</div>
+    <div class="extra-item"><b>Mise en place de film</b>Protecteur UV & chaleur</div>
+    <div class="extra-item"><b>Et bien plus encore</b>Nous consulter</div>
+  </div>
 
-<div class="top-section">
-  <div class="section-label">Les plus recherchés</div>
-  <div id="topGarages"><em style="color:var(--muted);font-size:12px">Les garages les plus recherchés apparaîtront ici automatiquement...</em></div>
-</div>
+  <div class="note"><b>Covering :</b> pour établir un tarif (partiel ou total), nous avons besoin de la marque, du modèle, de l'année et de l'état général de la carrosserie (peinture abîmée, éclats de vernis, éléments repeints...). Nous nous réservons le droit de refuser certains projets si l'état du véhicule n'est pas apte à recevoir le covering.</div>
+  <div class="note"><b>Impression numérique :</b> devis sur rendez-vous. Les projections et devis sont désormais payants si le projet n'aboutit pas.</div>
+</section>
 
-<div class="carriers-section">
-  <div class="section-label">Transporteurs</div>
-  <div class="carriers-list" id="carriersList"></div>
-</div>
+<section class="gallery" id="realisations">
+  <div class="head-row">
+    <div style="display:flex; align-items:baseline;"><span class="step-tag">02</span><div><span class="kicker">Réalisations</span><h2>Nos derniers travaux</h2></div></div>
+    <p class="sub">Survolez une photo pour la voir en couleur.</p>
+  </div>
 
-<div style="text-align:center;padding:16px 0 32px">
-  <span id="adminTrigger" style="font-size:18px;color:var(--muted);cursor:pointer;user-select:none;opacity:0.4;transition:opacity .2s" title="">🔒</span>
-</div>
+  <div class="gtabs" id="gtabs">
+    <button class="gtab active" data-cat="covering">Covering</button>
+    <button class="gtab" data-cat="ppf">PPF</button>
+    <button class="gtab" data-cat="vitres-auto">Vitres auto</button>
+    <button class="gtab" data-cat="vitres-batiment">Vitres bâtiment</button>
+    <button class="gtab" data-cat="impression">Impression</button>
+  </div>
 
-<!-- ADMIN PANEL -->
-<div class="admin-overlay" id="adminOverlay">
-  <div class="admin-box">
-    <!-- LOGIN -->
-    <div id="adminLogin">
-      <div class="admin-title">ADMIN 🔐</div>
-      <div class="admin-login">
-        <input type="password" id="adminPwd" placeholder="Mot de passe..." onkeydown="if(event.key==='Enter') checkAdminPwd()">
-        <button class="admin-btn" onclick="checkAdminPwd()">ACCÉDER</button>
-        <div class="admin-msg" id="adminLoginMsg"></div>
-      </div>
+  <div class="g-grid" id="galleryGrid"></div>
+</section>
+
+<section id="mariage">
+  <div class="head-row">
+    <div style="display:flex; align-items:baseline;"><span class="step-tag">03</span><div><span class="kicker">Mariage & Événementiel</span><h2>Au-delà de l'automobile</h2></div></div>
+  </div>
+  <div class="wed">
+    <div class="wed-card">
+      <span class="wed-tag">Spécial mariage</span>
+      <h3>Tammy & Benjamin</h3>
+      <p>Nous avons eu l'honneur d'accompagner Tammy & Benjamin dans le plus beau jour de leur vie, avec des éléments de décoration 100% personnalisés.</p>
+      <p>Tapis de cérémonie sur mesure, Roll-up de présentation, impressions haute qualité (photo-cadre, menus, plans de table, étiquettes autocollantes, vinyles) et un service création complet — toute la décoration pensée avec les futurs mariés pour s'accorder à leur thème.</p>
+      <img src="https://static.wixstatic.com/media/81cf68_d292dbba58b749a58efc2fdde175d687~mv2.jpg/v1/fit/w_900,q_80,enc_auto/81cf68_d292dbba58b749a58efc2fdde175d687~mv2.jpg" alt="Décoration mariage tapis de cérémonie personnalisé" loading="lazy">
     </div>
-
-    <!-- PANEL -->
-    <div id="adminPanel" style="display:none">
-      <div class="admin-title">
-        ADMIN
-        <button class="admin-close" onclick="closeAdmin()">✕ FERMER</button>
-      </div>
-
-      <!-- AJOUTER UN GARAGE -->
-      <div class="admin-section-title">Ajouter un garage</div>
-      <div class="admin-field">
-        <label>Nom du garage</label>
-        <input type="text" id="adminGarageName" placeholder="Ex: Garage Dupont">
-      </div>
-      <div class="admin-field">
-        <label>Transporteurs & horaires de départ (séparer par virgule ex: 09h30,15h30)</label>
-        <div class="admin-carriers-check" id="adminCarriersCheck">
-          <div class="admin-carrier-row">
-            <input type="checkbox" id="chk-serge">
-            <label class="admin-carrier-label" for="chk-serge">Serge</label>
-            <input class="admin-carrier-deps" id="deps-serge" placeholder="09h30,15h30" disabled>
-          </div>
-          <div class="admin-carrier-row">
-            <input type="checkbox" id="chk-lande">
-            <label class="admin-carrier-label" for="chk-lande">Packeto Lande</label>
-            <input class="admin-carrier-deps" id="deps-lande" placeholder="06h00,10h45" disabled>
-          </div>
-          <div class="admin-carrier-row">
-            <input type="checkbox" id="chk-pb">
-            <label class="admin-carrier-label" for="chk-pb">Packeto Pays Basque</label>
-            <input class="admin-carrier-deps" id="deps-pb" placeholder="11h15,16h15" disabled>
-          </div>
-          <div class="admin-carrier-row">
-            <input type="checkbox" id="chk-bearn">
-            <label class="admin-carrier-label" for="chk-bearn">Packeto Béarn</label>
-            <input class="admin-carrier-deps" id="deps-bearn" placeholder="11h00,15h30" disabled>
-          </div>
-          <div class="admin-carrier-row">
-            <input type="checkbox" id="chk-hendaye">
-            <label class="admin-carrier-label" for="chk-hendaye">Packeto Hendaye</label>
-            <input class="admin-carrier-deps" id="deps-hendaye" placeholder="09h15,14h15" disabled>
-          </div>
-          <div class="admin-carrier-row">
-            <input type="checkbox" id="chk-ace">
-            <label class="admin-carrier-label" for="chk-ace">ACE Hendaye</label>
-            <input class="admin-carrier-deps" id="deps-ace" placeholder="07h00,11h30" disabled>
-          </div>
-        </div>
-      </div>
-      <button class="admin-btn" onclick="adminAddGarage()">AJOUTER LE GARAGE</button>
-      <div class="admin-msg" id="adminAddMsg"></div>
-
-      <!-- SUPPRIMER UN GARAGE -->
-      <div class="admin-section-title" style="margin-top:28px">Supprimer un garage</div>
-      <input class="admin-search" id="adminDeleteSearch" placeholder="Rechercher un garage..." oninput="renderAdminList()">
-      <div class="admin-garage-list" id="adminGarageList"></div>
-
-      <!-- EDIT MODAL -->
-      <div class="admin-edit-modal" id="adminEditModal">
-        <div class="admin-section-title" style="margin-top:0">Modifier le garage : <span id="editGarageName" style="color:var(--accent)"></span></div>
-        <div class="admin-carriers-check" id="editCarriersCheck">
-          <div class="admin-carrier-row">
-            <input type="checkbox" id="echk-serge">
-            <label class="admin-carrier-label" for="echk-serge">Serge</label>
-            <input class="admin-carrier-deps" id="edeps-serge" placeholder="09h30,15h30" disabled>
-          </div>
-          <div class="admin-carrier-row">
-            <input type="checkbox" id="echk-lande">
-            <label class="admin-carrier-label" for="echk-lande">Packeto Lande</label>
-            <input class="admin-carrier-deps" id="edeps-lande" placeholder="06h00,10h45" disabled>
-          </div>
-          <div class="admin-carrier-row">
-            <input type="checkbox" id="echk-pb">
-            <label class="admin-carrier-label" for="echk-pb">Packeto Pays Basque</label>
-            <input class="admin-carrier-deps" id="edeps-pb" placeholder="11h15,16h15" disabled>
-          </div>
-          <div class="admin-carrier-row">
-            <input type="checkbox" id="echk-bearn">
-            <label class="admin-carrier-label" for="echk-bearn">Packeto Béarn</label>
-            <input class="admin-carrier-deps" id="edeps-bearn" placeholder="11h00,15h30" disabled>
-          </div>
-          <div class="admin-carrier-row">
-            <input type="checkbox" id="echk-hendaye">
-            <label class="admin-carrier-label" for="echk-hendaye">Packeto Hendaye</label>
-            <input class="admin-carrier-deps" id="edeps-hendaye" placeholder="09h15,14h15" disabled>
-          </div>
-          <div class="admin-carrier-row">
-            <input type="checkbox" id="echk-ace">
-            <label class="admin-carrier-label" for="echk-ace">ACE Hendaye</label>
-            <input class="admin-carrier-deps" id="edeps-ace" placeholder="07h00,11h30" disabled>
-          </div>
-        </div>
-        <button class="admin-btn" onclick="adminSaveEdit()" style="margin-top:12px">ENREGISTRER</button>
-        <button class="admin-btn danger" onclick="document.getElementById('adminEditModal').classList.remove('show')" style="margin-top:6px">ANNULER</button>
-        <div class="admin-msg" id="adminEditMsg"></div>
-      </div>
+    <div class="wed-card">
+      <span class="wed-tag">Événementiel auto</span>
+      <h3>Notre 1ère édition</h3>
+      <p>En partenariat avec BR Performance Bayonne et Car's Côte Basque, un événement automobile réunissant véhicules d'exception, stands de professionnels (détailing, débosselage sans peinture, montage pneus à domicile) et balade organisée l'après-midi.</p>
+      <p>Animations, jeu concours, café et viennoiseries, food truck et musique pour une journée entre passionnés.</p>
+      <img src="https://static.wixstatic.com/media/81cf68_3dd8f6716da849a9a0a907ae5ad122e6~mv2.jpg/v1/fit/w_900,q_80,enc_auto/81cf68_3dd8f6716da849a9a0a907ae5ad122e6~mv2.jpg" alt="Événement automobile ABS-Cover" loading="lazy">
     </div>
   </div>
+</section>
+
+<section id="ppf">
+  <div class="head-row">
+    <div style="display:flex; align-items:baseline;"><span class="step-tag">+</span><div><span class="kicker">Protection carrosserie</span><h2>PPF BodyFence</h2></div></div>
+  </div>
+  <div class="ppf">
+    <div class="ppf-photo" style="background-image:url('https://static.wixstatic.com/media/81cf68_5cd9948e121c4700b534f52cedf7e12f~mv2.jpg/v1/fill/w_700,h_900,q_80,enc_auto/81cf68_5cd9948e121c4700b534f52cedf7e12f~mv2.jpg');"></div>
+    <div>
+      <p style="color:var(--grey); font-size:15.5px; line-height:1.75;">Application d'un film transparent BodyFence — marque française, leader mondial — pour protéger votre carrosserie des agressions du quotidien. Autocicatrisant, protection UV. Tarif variable selon marque, modèle et spécificités du véhicule.</p>
+      <div class="cert-row">
+        <div class="cert"><b>Certifié 2022</b>Hexis BodyFence</div>
+        <div class="cert"><b>Certifié 2023</b>Hexis Flexishield</div>
+        <div class="cert"><b>Films</b>Fabriqués en France</div>
+      </div>
+      <a class="btn fill" style="margin-top:30px; display:inline-block;" href="tel:0631812421">Demander un tarif</a>
+    </div>
+  </div>
+</section>
+
+<div class="stats">
+  <div class="stat"><div class="num">2007</div><div class="lbl">Début d'activité</div></div>
+  <div class="stat"><div class="num">2013</div><div class="lbl">Création ABS-Cover</div></div>
+  <div class="stat"><div class="num">15 ANS</div><div class="lbl">Garantie films vitres</div></div>
+  <div class="stat"><div class="num">99%</div><div class="lbl">UV filtrés</div></div>
 </div>
+
+<section id="histoire">
+  <div class="head-row"><div style="display:flex; align-items:baseline;"><span class="step-tag">04</span><div><span class="kicker">L'atelier</span><h2>Histoire</h2></div></div></div>
+  <div class="histoire">
+    <div class="histoire-photo" style="background-image:url('https://static.wixstatic.com/media/81cf68_bbfd9917ae5f4af1a88ace37f73bfc7c~mv2.jpg/v1/fill/w_900,h_560,q_78,enc_auto/81cf68_bbfd9917ae5f4af1a88ace37f73bfc7c~mv2.jpg');"></div>
+    <div>
+      <p>Pratiquant ce métier depuis <b>2007</b>, ABS-Cover existe depuis <b>2013</b>.</p>
+      <p>Passionné depuis toujours par l'automobile et soucieux de la qualité, <b>Romain</b> est exigeant envers son travail, et propose un service de qualité supplémentaire.</p>
+      <p>Toujours à la recherche de la perfection, il obtient ses certifications de poseur agréé — certifié chez Hexis pour le BodyFence en 2022 et Flexishield en 2023.</p>
+      <p>Nous proposons à nos clients un suivi personnalisé. Nos prestations conviennent autant aux particuliers qu'aux entreprises (concessionnaires, usines, vitrines magasins...).</p>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="head-row"><div style="display:flex; align-items:baseline;"><span class="step-tag">05</span><div><span class="kicker">Nous trouver</span><h2>Contact</h2></div></div></div>
+  <div class="contact-wrap">
+    <div>
+      <div class="contact-block">
+        <h3>Adresse</h3>
+        <p>1401 Bis route de Bayonne<br>40230 Benesse-Maremne</p>
+        <p style="margin-top:8px;"><a href="https://www.google.com/maps/search/?api=1&query=1401+Bis+route+de+Bayonne+40230+Benesse-Maremne" target="_blank" rel="noopener noreferrer">Voir sur la carte →</a></p>
+        <p style="margin-top:10px; color:var(--accent); font-family:'JetBrains Mono',monospace; font-size:11px;">Nouvelle adresse à partir du 1er septembre</p>
+      </div>
+      <div class="contact-block">
+        <h3>Téléphone</h3>
+        <a href="tel:0631812421">06 31 81 24 21</a>
+        <p style="margin-top:8px;">Préférez un appel téléphonique au formulaire pour les demandes de tarifs.</p>
+      </div>
+      <div class="contact-block">
+        <h3>Horaires</h3>
+        <p>Lundi – Vendredi : 8h00 – 14h00<br>Après-midi uniquement sur rendez-vous</p>
+      </div>
+      <div class="contact-block">
+        <h3>Réseaux</h3>
+        <p><a href="https://www.facebook.com/Ab.solution6440" target="_blank" rel="noopener noreferrer">Facebook</a> · <a href="https://www.instagram.com/ab.solution6440/" target="_blank" rel="noopener noreferrer">Instagram</a> — @ab.solution6440</p>
+      </div>
+    </div>
+    <form id="contactForm">
+      <div><label>Nom</label><input type="text" required></div>
+      <div><label>Email</label><input type="email" required></div>
+      <div><label>Sujet</label>
+        <select><option>Vitres teintées</option><option>Protection PPF</option><option>Covering</option><option>Impression numérique</option><option>Autre</option></select>
+      </div>
+      <div><label>Message</label><textarea placeholder="Marque, modèle, année du véhicule..."></textarea></div>
+      <button class="btn fill" type="submit" style="align-self:flex-start; border:none;">Envoyer</button>
+      <div class="form-msg" id="formMsg">Message simulé envoyé — le formulaire réel enverrait directement l'email à l'atelier.</div>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <div class="logo" style="font-size:16px;"><img src="https://static.wixstatic.com/media/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png/v1/fill/w_100,h_111,q_85,enc_auto/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png" alt="Logo ABS-Cover" style="height:22px;">ABS<span>-</span>COVER</div>
+  <span>REFONTE DE DÉMONSTRATION — CONTENU ET PHOTOS © ABS-COVER</span>
+  <span>06 31 81 24 21 — BENESSE-MAREMNE (40)</span>
+</footer>
 
 <script>
-// ── SUPABASE ──────────────────────────────────────────────────────────────────
-const SUPA_URL = 'https://aitbhskkwoqmoqfpogph.supabase.co';
-const SUPA_KEY = 'sb_publishable_84rSs3LwBpdWs4qbPd5zkA_dOh-ci4s';
+// ===== Données galerie par catégorie =====
+const galleries = {
+  covering: [
+    ["81cf68_bcb078de360f4faebc8554a7d84950ea~mv2.jpg", "Total Covering — Dodge Challenger"],
+    ["81cf68_669c005a8495493383ac706070f9d03a~mv2.png", "Total Covering — Gris satin"],
+    ["81cf68_72c2c200e8c843bdb30e46e3251bf28a~mv2.png", "Bi-ton bleu — Ford Custom"],
+    ["81cf68_06a9ad6cb05a4d2ca5c735ec9256cbf8~mv2.jpg", "Du noir au gris mat"],
+    ["81cf68_04cbc69ab51e443c8c787ac2635f49d5~mv2.jpg", "Bi-ton — Transporter"],
+    ["81cf68_e4f36209d37c4bd399f0dd7e59772c0a~mv2.jpg", "Du blanc au bleu mat"],
+    ["81cf68_dc135c88d6c0470ebbabddd1b368be63~mv2.jpg", "Bi-ton doré — Transporter"],
+    ["81cf68_8baf3beb3c734a9593646daa3e8bdacf~mv2.jpg", "Bi-ton bleu Ara"],
+    ["81cf68_8acb4feed79a4ea3ae2c34d6fad16259~mv2.jpg", "Bi-ton kaki"],
+    ["81cf68_c588742e7e044877a6be4c87c4de3909~mv2.jpg", "Décoratif noir satin + splashs"],
+    ["81cf68_2ca0daf506db4fe083d1c16df4867c6b~mv2.jpg", "Décoratif noir satin"],
+    ["81cf68_25fa6bed3ccb48758d67510b406aa8d0~mv2.jpg", "Total Covering"],
+  ],
+  ppf: [
+    ["81cf68_5cd9948e121c4700b534f52cedf7e12f~mv2.jpg", "Protection carrosserie PPF"],
+    ["81cf68_8542d40d668446f3969ebca46f9d6183~mv2.jpg", "Pose PPF BodyFence"],
+    ["81cf68_98b75c19f9c64f0d945c5dac6db5fb38~mv2.jpg", "Pose PPF BodyFence"],
+    ["81cf68_ad1e9072472d4615911ef1de8dbf4893~mv2.jpg", "Pose PPF BodyFence"],
+    ["81cf68_ad7e7890dec84feb9407e544f9cbe1d8~mv2.jpg", "Pose PPF BodyFence"],
+    ["81cf68_8f6c6c79c4954597951ed3631d53e3ba~mv2.jpg", "Pose PPF BodyFence"],
+    ["81cf68_67965c06018c42908a8cef3b31d61633~mv2.jpg", "Pose PPF BodyFence"],
+    ["81cf68_53043a863be94f438057eb66704ea5bb~mv2.jpg", "Pose PPF BodyFence"],
+  ],
+  "vitres-auto": [
+    ["81cf68_8345900b8a4e429ca950d8aee3663034~mv2.jpg", "Vitres teintées auto"],
+    ["81cf68_5689c8ab1c7f4866898b2c5798cb34be~mv2.jpg", "Vitres teintées auto"],
+    ["81cf68_30a152fa31a84d1eb2a93e1507af9f5d~mv2.jpg", "Vitres teintées auto"],
+    ["81cf68_ec09f14120f6441697af18987603ac4f~mv2.jpg", "Vitres teintées auto"],
+    ["81cf68_223cfd66f5d143cca41d99b3e34b1d8d~mv2.jpg", "Vitres teintées auto"],
+    ["81cf68_5022916fb95b487faf1765b3e91f638f~mv2.jpg", "Vitres teintées auto"],
+    ["81cf68_90ce0b112c8940419ac2098c6aff7569~mv2.jpg", "Vitres teintées auto"],
+    ["81cf68_38716152d0d04e45a90d541de4e88b67~mv2.jpg", "Vitres teintées auto"],
+  ],
+  "vitres-batiment": [
+    ["81cf68_613272215dad45c089e082405b8e4093~mv2.jpg", "Vitres teintées bâtiment"],
+    ["81cf68_ac9fb670ec914b37943f8bc77e8d57ff~mv2.jpg", "Vitres teintées bâtiment"],
+    ["81cf68_70b8aee417e14fe4a4a6c6fdfc7d0372~mv2.jpg", "Vitres teintées bâtiment"],
+    ["81cf68_c5a3c9a24a8c400a87aad107740a9b66~mv2.jpg", "Vitres teintées bâtiment"],
+    ["81cf68_324a1b56c467499b8fc2c05281f3af28~mv2.jpg", "Vitres teintées bâtiment"],
+    ["81cf68_a5e5fb32524b4c3692e049e2297bcdfe~mv2.jpg", "Vitres teintées bâtiment"],
+    ["81cf68_253b2b467e5145ae8fa2f8d5e3d2c85b~mv2.jpg", "Vitres teintées bâtiment"],
+    ["81cf68_835a6dab1e354b28807942ec9551c7d0~mv2.jpg", "Vitres teintées bâtiment"],
+  ],
+  impression: [
+    ["81cf68_6d0420ebc78349999cd2e1abc9049f7c~mv2.jpg", "Roll-up 100% personnalisable"],
+    ["81cf68_d292dbba58b749a58efc2fdde175d687~mv2.jpg", "Impression numérique"],
+    ["81cf68_50998c41f58b48549b9da2be47edf44e~mv2.jpg", "Impression numérique"],
+    ["81cf68_2dc4e062025441bfa81af870f2107d6e~mv2.jpg", "Impression micro-perforé"],
+    ["81cf68_3543c0f601204104879d3b1618779d0e~mv2.jpg", "Création, impression, pose enseigne"],
+    ["81cf68_457bb3562473400aa5bbec6e72432f69~mv2.jpg", "Impression numérique"],
+    ["81cf68_ce21f6060c7d4570a0f7306866612bbf~mv2.jpg", "Impression numérique"],
+    ["81cf68_0df213b973c544f8932712f82e436c17~mv2.jpg", "Bandes T6 aux couleurs de la société"],
+  ],
+};
 
-async function supaFetch(path, method, body) {
-  const opts = {
-    method: method || 'GET',
-    headers: {
-      'apikey': SUPA_KEY,
-      'Authorization': 'Bearer ' + SUPA_KEY,
-      'Content-Type': 'application/json',
-      'Prefer': method === 'POST' ? 'resolution=merge-duplicates' : ''
-    }
-  };
-  if(body) opts.body = JSON.stringify(body);
-  const res = await fetch(SUPA_URL + '/rest/v1/' + path, opts);
-  if(res.status === 204) return null;
-  return res.json();
+const galleryGrid = document.getElementById('galleryGrid');
+function renderGallery(cat){
+  galleryGrid.innerHTML = '';
+  galleries[cat].forEach(([file, label], i) => {
+    const div = document.createElement('div');
+    div.className = 'g-item reveal';
+    const thumb = `https://static.wixstatic.com/media/${file}/v1/fill/w_500,h_500,q_72,enc_auto/${file}`;
+    div.innerHTML = `<img src="${thumb}" alt="${label}" loading="lazy" width="500" height="500"><div class="g-label">${label}</div>`;
+    div.addEventListener('click', () => openLightbox(cat, i));
+    galleryGrid.appendChild(div);
+    requestAnimationFrame(() => div.classList.add('in-view'));
+  });
 }
 
-// Stats partagées
-window.incStatShared = async function(name) {
-  try {
-    await supaFetch('stats?on_conflict=name', 'POST', {name: name, count: 1});
-    // Upsert via RPC pour incrémenter
-    await fetch(SUPA_URL + '/rest/v1/rpc/increment_stat', {
-      method: 'POST',
-      headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json'},
-      body: JSON.stringify({garage_name: name})
-    });
-  } catch(e) {}
-};
+// ===== Lightbox photo (clic sur une vignette = agrandissement) =====
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightboxImg');
+const lightboxCaption = document.getElementById('lightboxCaption');
+let lbCat = null, lbIndex = 0;
 
-window.getTopShared = async function(n) {
-  try {
-    const data = await supaFetch('stats?order=count.desc&limit=' + (n||10));
-    return (data||[]).map(function(r){ return [r.name, r.count]; });
-  } catch(e) { return []; }
-};
+function openLightbox(cat, index){
+  lbCat = cat; lbIndex = index;
+  showLightboxImage();
+  lightbox.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox(){
+  lightbox.classList.remove('open');
+  document.body.style.overflow = '';
+}
+function showLightboxImage(){
+  const [file, label] = galleries[lbCat][lbIndex];
+  lightboxImg.src = `https://static.wixstatic.com/media/${file}/v1/fit/w_1400,q_82,enc_auto/${file}`;
+  lightboxImg.alt = label;
+  lightboxCaption.textContent = `${label} — ${lbIndex + 1}/${galleries[lbCat].length}`;
+}
+function lbNext(){ lbIndex = (lbIndex + 1) % galleries[lbCat].length; showLightboxImage(); }
+function lbPrev(){ lbIndex = (lbIndex - 1 + galleries[lbCat].length) % galleries[lbCat].length; showLightboxImage(); }
 
-// Compteur total
-window.incTotalSearchCount = async function() {
-  try {
-    await fetch(SUPA_URL + '/rest/v1/rpc/increment_total', {
-      method: 'POST',
-      headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json'},
-      body: '{}'
-    });
-  } catch(e) {}
-};
+document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+document.getElementById('lightboxNext').addEventListener('click', lbNext);
+document.getElementById('lightboxPrev').addEventListener('click', lbPrev);
+lightbox.addEventListener('click', e => { if(e.target === lightbox) closeLightbox(); });
+document.addEventListener('keydown', e => {
+  if(!lightbox.classList.contains('open')) return;
+  if(e.key === 'Escape') closeLightbox();
+  if(e.key === 'ArrowRight') lbNext();
+  if(e.key === 'ArrowLeft') lbPrev();
+});
 
-window.getTotalSearchCount = async function() {
-  try {
-    const data = await supaFetch('meta?name=eq.total_searches');
-    return (data && data[0]) ? data[0].value : 0;
-  } catch(e) { return 0; }
-};
+renderGallery('covering');
+document.getElementById('gtabs').addEventListener('click', e => {
+  const btn = e.target.closest('.gtab');
+  if(!btn) return;
+  document.querySelectorAll('.gtab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderGallery(btn.dataset.cat);
+});
 
-// Garages admin
-window.saveGarageToSupabase = async function(name, carriers) {
-  try {
-    await supaFetch('garages?on_conflict=name', 'POST', {name: name, carriers: JSON.stringify(carriers)});
-  } catch(e) { console.log('Supabase error:', e); }
-};
+// ===== Navigation mobile (hamburger + panneau) =====
+const burgerBtn = document.getElementById('burgerBtn');
+const mobilePanel = document.getElementById('mobilePanel');
+const mobileClose = document.getElementById('mobileClose');
 
-window.deleteGarageFromSupabase = async function(name) {
-  try {
-    await supaFetch('garages?name=eq.' + encodeURIComponent(name), 'DELETE');
-  } catch(e) { console.log('Supabase error:', e); }
-};
+function openPanel(){
+  mobilePanel.classList.add('open');
+  burgerBtn.setAttribute('aria-expanded', 'true');
+  document.body.style.overflow = 'hidden';
+}
+function closePanel(){
+  mobilePanel.classList.remove('open');
+  burgerBtn.setAttribute('aria-expanded', 'false');
+  document.body.style.overflow = '';
+}
+burgerBtn.addEventListener('click', openPanel);
+mobileClose.addEventListener('click', closePanel);
+mobilePanel.querySelectorAll('a').forEach(a => a.addEventListener('click', closePanel));
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closePanel(); });
 
-window.loadGaragesFromSupabase = async function() {
-  try {
-    const data = await supaFetch('garages?select=name,carriers');
-    if(!data || !data.length) return;
-    data.forEach(function(row) {
-      const carriers = JSON.parse(row.carriers);
-      const exists = window.GARAGES_DATA_REF && window.GARAGES_DATA_REF.find(function(g){ return g.g === row.name; });
-      if(!exists && window.GARAGES_DATA_REF) {
-        window.GARAGES_DATA_REF.push({g: row.name, carriers: carriers});
-      } else if(exists && window.GARAGES_DATA_REF) {
-        // Mettre à jour si modifié
-        exists.carriers = carriers;
-      }
-    });
-    if(window.GARAGES_DATA_REF) window.GARAGES_DATA_REF.sort(function(a,b){ return a.g.localeCompare(b.g); });
-    if(window.renderCarriers) window.renderCarriers();
-    if(window.renderTop) window.renderTop();
-  } catch(e) { console.log('Supabase error:', e); }
-};
+// ===== Clic sur le rail de route (desktop) et la barre d'onglets (mobile) =====
+function scrollToSection(id){
+  const el = document.getElementById(id);
+  if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+}
+document.querySelectorAll('.route-stop').forEach(btn => {
+  btn.addEventListener('click', () => scrollToSection(btn.dataset.target));
+});
+document.querySelectorAll('.tabbar button').forEach(btn => {
+  btn.addEventListener('click', () => scrollToSection(btn.dataset.target));
+});
+document.getElementById('scrollHint').addEventListener('click', () => scrollToSection('services'));
+
+// ===== Cartes de service cliquables → galerie filtrée ou section dédiée =====
+function goToGalleryTab(cat){
+  scrollToSection('realisations');
+  const tabBtn = document.querySelector(`.gtab[data-cat="${cat}"]`);
+  if(tabBtn){
+    document.querySelectorAll('.gtab').forEach(t => t.classList.remove('active'));
+    tabBtn.classList.add('active');
+    renderGallery(cat);
+  }
+}
+document.querySelectorAll('.serv-card[data-goto]').forEach(card => {
+  card.addEventListener('click', () => goToGalleryTab(card.dataset.goto));
+});
+document.querySelectorAll('.serv-card[data-goto-section]').forEach(card => {
+  card.addEventListener('click', () => scrollToSection(card.dataset.gotoSection));
+});
+
+// ===== Reveal au scroll =====
+document.querySelectorAll('.head-row, .serv-card, .g-item, .stat, .histoire-photo, .contact-block, form, .wed-card, .extra-item')
+  .forEach(el => el.classList.add('reveal'));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){ entry.target.classList.add('in-view'); io.unobserve(entry.target); }
+  });
+}, {threshold:0.12, rootMargin:'0px 0px -8% 0px'});
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+// ===== Nav + rail "route" + barre d'onglets actifs (IntersectionObserver, pas de scroll listener lourd) =====
+const navLinks = document.querySelectorAll('nav a[data-nav]');
+const railStops = document.querySelectorAll('.route-stop');
+const tabbarBtns = document.querySelectorAll('.tabbar button[data-target]');
+const mobileNavLinks = document.querySelectorAll('a[data-nav-mobile]');
+const sectionIds = ['services', 'realisations', 'mariage', 'histoire', 'contact'];
+const sections = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
+
+const navObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      const id = entry.target.id;
+      navLinks.forEach(l => l.classList.toggle('active', l.dataset.nav === id));
+      railStops.forEach(s => s.classList.toggle('active', s.dataset.target === id));
+      tabbarBtns.forEach(t => t.classList.toggle('active', t.dataset.target === id));
+      mobileNavLinks.forEach(l => l.classList.toggle('active', l.dataset.navMobile === id));
+    }
+  });
+}, {rootMargin:'-45% 0px -50% 0px'});
+sections.forEach(s => navObserver.observe(s));
+
+// ===== Barre de progression du rail (un seul listener, léger, rAF-batched) =====
+const routeFill = document.getElementById('routeFill');
+let ticking = false;
+function updateProgress(){
+  const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = Math.min(Math.max(window.scrollY / scrollable, 0), 1) * 100;
+  routeFill.style.height = pct + '%';
+  ticking = false;
+}
+window.addEventListener('scroll', () => {
+  if(!ticking){ requestAnimationFrame(updateProgress); ticking = true; }
+}, {passive:true});
+updateProgress();
+
+document.getElementById('contactForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  document.getElementById('formMsg').classList.add('show');
+});
 </script>
 
-<script>
-const CARRIERS = {
-  serge:   { label: 'Serge' },
-  lande:   { label: 'Packeto Lande' },
-  pb:      { label: 'Packeto Pays Basque' },
-  bearn:   { label: 'Packeto Béarn' },
-  hendaye: { label: 'Packeto Hendaye' },
-  ace:     { label: 'ACE Hendaye' },
-};
-
-const CARRIER_DEPS = {
-  serge:   ['09h30','15h30'],
-  lande:   ['06h00','10h45','11h00','15h30'],
-  pb:      ['11h15','16h15','18h00'],
-  bearn:   ['11h00','15h30'],
-  hendaye: ['09h15','14h15'],
-  ace:     ['07h00','11h30'],
-};
-
-const GARAGES_DATA = [
-  // ── A ──
-  { g: 'ABL Automobile',              carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Adour Occasion',              carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'AG Auto 64',                  carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Agri Oto',                    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Aguer',                       carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Aguerre André (Irissarry)',   carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Ahozteia',                    carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Alain EMP Parachou (Loubet)', carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Alfaro Mattin',               carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Alfaro Sébastien',            carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Ambulance Du Labourd',        carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Aquitaine Auto Béarn',        carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Arosteguy',                   carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Arrayet Garage',              carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Arrieta (Station Elan)',      carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'ASF',                         carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Astigarage',                  carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'At Jardin',                   carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Atelier Du Bourriaou',        carriers: [{id:'bearn',deps:['11h00','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Atelier Garcia',              carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Atlantic Auto',               carriers: [{id:'lande',deps:['10h45','15h30']}] },
-  { g: 'Augaray (Roady)',             carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Autaa Levage (Artix)',        carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Auto Loisir',                 carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Auto Casse Du Labourd',       carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Auto Libier',                 carriers: [{id:'hendaye',deps:['09h15','14h15']}] },
-  { g: 'Auto Méca Concept',           carriers: [{id:'lande',deps:['06h00','11h00','15h30']},{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Auto Sport',                  carriers: [] },
-  { g: 'Autolan',                     carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Autovision',                  carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  // ── B ──
-  { g: 'Barbe Et Fils',               carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
-  { g: 'Barnetche',                   carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Bénat Lahirigoyen',           carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Berho',                       carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Berrouet',                    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Bidegaimberry',               carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Bildozeko',                   carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Bittola',                     carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Bourriaou',                   carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Bug',                         carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  // ── C ──
-  { g: 'Canton',                      carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Capbreton Garage Service',    carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
-  { g: 'Carriquiry',                  carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Carrosserie Du 64',           carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Casse Auto Valade (EV)',      carriers: [{id:'lande',deps:['06h00']},{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Casse Auto Du Labourd',       carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Castera',                     carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Catelin',                     carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Cazauran',                    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Cebre Auto Bidassoa',         carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Chopin',                      carriers: [{id:'lande',deps:['06h00','10h45']}] },
-  { g: 'Clean And Co',                carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
-  { g: 'CN Auto',                     carriers: [{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Colet',                       carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Commune De Maremne',          carriers: [{id:'lande',deps:['11h00']}] },
-  { g: 'Commune De Salies',           carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Coreba',                      carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Creacar (Ayherré)',           carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Creacar (Hasparren)',         carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Crosa St Jean De Luz',        carriers: [{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Cruiser',                     carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
-  { g: 'Ctrl Technique Bonloc',       carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  // ── D ──
-  { g: 'Daguerre',                    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Dallard St Jean De Luz',      carriers: [{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Dallard St Paul Les Dax',     carriers: [{id:'lande',deps:['06h00','11h00']}] },
-  { g: 'Dartiguenave',                carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'DCI Event',                   carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Debussy',                     carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Dekra (Itxassou)',            carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Detcheverry',                 carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Div Bug',                     carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'DNL Auto',                    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Doucet',                      carriers: [{id:'lande',deps:['06h00','10h45']}] },
-  { g: 'Douhry',                      carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Drop Loc',                    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'DSM Auto',                    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'DTH',                         carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Duhalde',                     carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Duhau (St Palais)',           carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Durruty (GSD)',               carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'DV Auto',                     carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Dirasse',                    carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Landes Auto Remorques',      carriers: [{id:'lande',deps:['10h45','15h30']}] },
-  // ── E ──
-  { g: 'Eco Pneu',                    carriers: [{id:'lande',deps:['06h00','11h00']}] },
-  { g: 'Egis Exploitation',           carriers: [{id:'lande',deps:['06h00','11h00']}] },
-  { g: 'EMP Lapurdi',                 carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Errobi Garage',               carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Espace Auto Landais',         carriers: [{id:'lande',deps:['06h00']},{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Essenjy',                     carriers: [{id:'lande',deps:['06h00','11h00','15h30']}] },
-  { g: 'Etchegaray (Hasparren)',      carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Etchegaray (Larressore)',     carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Etchegaray Guy (Itxassu)',    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Etchegoimberry',              carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Etchegoïn',                   carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Etcheverry Garage',           carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'ETPM',                        carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Euromaster (St Palais)',      carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Europ Autosport',             carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'EV (Casse Auto Valade)',      carriers: [{id:'lande',deps:['06h00']},{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Evasion Marine',              carriers: [{id:'lande',deps:['10h45','15h30']}] },
-  { g: 'Eyheramouno',                 carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Ezpela',                      carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  // ── F ──
-  { g: 'Feu Vert Bidart',             carriers: [{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Feu Vert Dax',               carriers: [{id:'lande',deps:['06h00','11h00']}] },
-  { g: 'Feu Vert Hendaye',            carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Feu Vert St Jean',            carriers: [{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Fix Auto',                    carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Frantxoa Maitia',             carriers: [{id:'serge',deps:['09h30','15h30']}] },
-  // ── G ──
-  { g: 'Garage De La Gare',          carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Garage De La Zone',          carriers: [{id:'lande',deps:['06h00','10h45']}] },
-  { g: "Garage De L'Avenue Hossegor",carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
-  { g: 'Garage De Maremne',          carriers: [{id:'lande',deps:['06h00','11h00']}] },
-  { g: 'Garage Des Lacs',            carriers: [{id:'lande',deps:['06h00','11h00']}] },
-  { g: 'Garage Du Canton',           carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Garage Du Rond Point',       carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Garage Du Seignanx',         carriers: [{id:'lande',deps:['06h00']},{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Garage Errobi',              carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Garauto',                    carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
-  { g: 'Garazi DTH',                 carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Gardères',                   carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Gariador',                   carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Gauyat',                     carriers: [{id:'lande',deps:['06h00','11h00','15h30']}] },
-  { g: 'GD Pneu',                    carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'GDM',                        carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Gentil Service',             carriers: [{id:'lande',deps:['06h00','10h45']}] },
-  { g: 'Global Car',                 carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'GSD Gestion Sces Location',  carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  // ── H ──
-  { g: 'Happy Car',                  carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Harispe',                    carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Haristoy',                   carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Herrikoa',                   carriers: [{id:'hendaye',deps:['09h15','14h15']}] },
-  { g: 'Hirigoyen Louhossoa',        carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Hirigoyen Macaye',           carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Hiruak Bat',                 carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Hourdebaigt',                carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  // ── I ──
-  { g: 'Illumbe',                    carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Intxaurmendi',               carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Irachabal',                  carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Irey',                       carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Iribarren Patrick',          carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Ispeguy (Mocho)',            carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  // ── J ──
-  { g: 'Jaury',                      carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'JM Auto',                    carriers: [{id:'lande',deps:['06h00']},{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'John Deere',                 carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'JS Auto',                    carriers: [{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Julien Muguida',             carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  // ── K ──
-  { g: 'Kenzo',                      carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Koro',                       carriers: [{id:'lande',deps:['10h45','15h30']}] },
-  // ── L ──
-  { g: "L'Avenue Hossegor",          carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
-  { g: 'La Gare (Combo)',            carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Labaçhot (Escos)',           carriers: [{id:'pb',deps:['15h15','18h00']}] },
-  { g: 'Laminak Bus',                carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Lana',                       carriers: [{id:'lande',deps:['06h00','10h45','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Landoto',                    carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
-  { g: 'Lapurdi Garage',             carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Lascano',                    carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Lau Auto',                   carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Lavignasse',                 carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'LB Service 40',             carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Le Petit Garage',            carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Le Vieux Port (Chez Chopin)',carriers: [{id:'lande',deps:['06h00','10h45']}] },
-  { g: 'Leclerc Capbreton (Socadi)', carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
-  { g: 'Leclerc Hendaye',            carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Leclerc Soutons',            carriers: [{id:'lande',deps:['06h00','10h45']}] },
-  { g: 'Leclerc St Jean De Luz',     carriers: [{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Leclerc Tyrosse',            carriers: [{id:'lande',deps:['06h00','11h00','15h30']}] },
-  { g: 'Lerzy',                      carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Lissart Didier',             carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Lokaz Auto',                 carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Loubet',                     carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Lousteau',                   carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Lucu',                       carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Lycée Pro JP Champo',        carriers: [{id:'pb',deps:['11h15']}] },
-  // ── M ──
-  { g: 'Madalia Ocafrain',           carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Mainhaguiet',                carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Maitia Frantxoa',            carriers: [{id:'serge',deps:['09h30','15h30']}] },
-  { g: 'Many Loisir',                carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Marensin Chopin',            carriers: [{id:'lande',deps:['06h00','10h45']}] },
-  { g: 'Marinela',                   carriers: [{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Martinon',                   carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Mathieu EMP Lapurdi',        carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Maya Sport',                 carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Mecagri',                    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Mendiburu Frere-Horticulteur',carriers:[{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Mendikoharis (URT Auto)',    carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'MHSB',                       carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Miramon',                    carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'MJ Auto',                    carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'ML',                         carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Mocho (Ispeguy)',            carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Montolieu',                  carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Motoculture Du Bas Adour',   carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Muguida',                    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  // ── N ──
-  { g: 'Nafarroa',                   carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Naza',                       carriers: [{id:'lande',deps:['10h45','15h30']}] },
-  { g: 'NCS',                        carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Negobus',                    carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Néo Réseaux',                carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Neoglass',                   carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Noël Auto',                  carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'NR Motorsport',              carriers: [{id:'bearn',deps:['11h00']}] },
-  // ── O ──
-  { g: 'Ocafrain Madalia',           carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Olaizola',                   carriers: [{id:'pb',deps:['15h15','16h15']}] },
-  { g: 'Orthez Auto',                carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Oyhamburu',                  carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  // ── P ──
-  { g: 'Pat Auto',                   carriers: [{id:'serge',deps:['15h30']},{id:'pb',deps:['11h15']}] },
-  { g: 'Pedare (Ustaritz)',          carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Petit Garage',               carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Peyre Pare-Brise',           carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Pirone',                     carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
-  { g: 'Planuya',                    carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Pochulu',                    carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Poulou Pascal',              carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Puissance D Garage',         carriers: [{id:'lande',deps:['06h00','11h00']}] },
-  { g: 'Pyrénées Auto',              carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  // ── R ──
-  { g: 'Raymond',                    carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Reflex Auto',                carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
-  { g: 'Relais Des Gaves',           carriers: [{id:'lande',deps:['06h00']},{id:'pb',deps:['11h00','15h30']},{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Roady (Augaray)',            carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Rond Point',                 carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'RV Garage',                  carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  // ── S ──
-  { g: 'Sabarots',                   carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Saffores',                   carriers: [] },
-  { g: 'Sakanette',                  carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Salles Et Dutrey',           carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
-  { g: 'Scavelli',                   carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Semerena',                   carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'SGM Auto',                   carriers: [{id:'lande',deps:['06h00','11h00']}] },
-  { g: 'Sobamat',                    carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Socadi (Leclerc Capbreton)', carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
-  { g: 'Sopite',                     carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Spvi Dax',                   carriers: [{id:'lande',deps:['06h00','11h00']}] },
-  { g: 'St Etienne Garage',          carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Station Elan Arrieta',       carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Station Service Du Port',    carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
-  { g: 'STPI',                       carriers: [{id:'hendaye',deps:['09h15','14h15']}] },
-  // ── T ──
-  { g: 'Thambo J-Pierre',            carriers: [{id:'pb',deps:['11h15','18h00']}] },
-  { g: 'Tilt Auto',                  carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'TMS',                        carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Toffolo',                    carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'Triumphe (Vintage Vadrouille)',carriers:[{id:'hendaye',deps:['09h15','14h15']}] },
-  { g: 'TS Auto',                    carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  // ── U ──
-  { g: 'Urtxintxa',                  carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  { g: 'URT Auto (Mendikoharis)',    carriers: [{id:'pb',deps:['11h15','16h15']}] },
-  // ── V ──
-  { g: 'Vallade (EV)',               carriers: [{id:'lande',deps:['06h00']},{id:'bearn',deps:['11h00','15h30']}] },
-  { g: 'Ville De Cambo',             carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15']}] },
-  { g: 'Ville Hendaye',              carriers: [{id:'hendaye',deps:['09h15','14h15']},{id:'ace',deps:['07h00','11h30']}] },
-  { g: 'Ville Hossegor',             carriers: [{id:'lande',deps:['06h00','10h45']}] },
-  { g: 'Vintage Car Club',           carriers: [{id:'lande',deps:['06h00','10h45','15h30']}] },
-  { g: 'Vintage Vadrouille (Triumphe)',carriers:[{id:'hendaye',deps:['09h15','14h15']}] },
-  // ── W ──
-  { g: 'World Of Part',              carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  // ── X ──
-  { g: 'Xabi Girard',                carriers: [{id:'serge',deps:['09h30','15h30']},{id:'pb',deps:['11h15','15h30']}] },
-  { g: 'Xabi Meca',                  carriers: [{id:'bearn',deps:['11h00','15h30']}] },
-  // ── Z ──
-  { g: 'Zelaia',                     carriers: [{id:'pb',deps:['11h15','18h00']}] },
-];
-
-// Helpers
-function toMin(h,m){ return h*60+m; }
-function nowMin(){ const n=new Date(); return n.getHours()*60+n.getMinutes(); }
-function parseTime(s){ const parts=s.split('h'); return toMin(parseInt(parts[0]), parseInt(parts[1]||0)); }
-function fmt(min){ const h=Math.floor(min/60),m=min%60; return String(h).padStart(2,'0')+'h'+String(m).padStart(2,'0'); }
-function fmtCD(diff){
-  if(diff<=0) return 'EN COURS';
-  if(diff<60) return diff+' MIN';
-  return Math.floor(diff/60)+'h'+String(diff%60).padStart(2,'0');
-}
-function normalize(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
-function getDeps(c){ return c.deps.map(parseTime); }
-function nextDep(c){ const now=nowMin(), d=getDeps(c).filter(t=>t>now); return d.length ? Math.min(...d) : null; }
-function carrierSt(c){
-  const now=nowMin(), deps=getDeps(c), up=deps.filter(t=>t>now);
-  if(!up.length) return {s:'past'};
-  const nxt=Math.min(...up), diff=nxt-now;
-  if(diff<=15) return {s:'imminent',next:nxt,diff};
-  if(diff<=30) return {s:'soon',next:nxt,diff};
-  return {s:'upcoming',next:nxt,diff};
-}
-
-// Notifications
-const notified = new Set();
-function showToast(title, body, urgent){
-  const el = document.getElementById('toast');
-  document.getElementById('toastTitle').textContent = title;
-  document.getElementById('toastBody').textContent = body;
-  el.className = 'toast' + (urgent ? ' urgent' : '') + ' show';
-  setTimeout(function(){ el.className = 'toast' + (urgent ? ' urgent' : ''); }, 6000);
-}
-function checkNotifs(){
-  const now = nowMin();
-  Object.keys(CARRIER_DEPS).forEach(function(cid){
-    CARRIER_DEPS[cid].forEach(function(d){
-      const t = parseTime(d), diff = t - now;
-      const k30 = cid+d+'30', k15 = cid+d+'15';
-      if(diff > 0 && diff <= 30 && !notified.has(k30)){
-        notified.add(k30);
-        showToast('⏰ Départ dans 30 min', CARRIERS[cid].label + ' — ' + d, false);
-        if(window.Notification && Notification.permission === 'granted')
-          new Notification('⏰ Départ dans 30 min', {body: CARRIERS[cid].label + ' part à ' + d});
-      }
-      if(diff > 0 && diff <= 15 && !notified.has(k15)){
-        notified.add(k15);
-        showToast('🚨 DÉPART IMMINENT', CARRIERS[cid].label + ' — ' + d + ' — ' + diff + ' MIN', true);
-        if(window.Notification && Notification.permission === 'granted')
-          new Notification('🚨 DÉPART IMMINENT', {body: CARRIERS[cid].label + ' dans ' + diff + ' min !'});
-      }
-    });
-  });
-}
-if(window.Notification && Notification.permission === 'default') Notification.requestPermission();
-
-// Stats
-function getStats(){ try{ return JSON.parse(localStorage.getItem('gs_v4') || '{}'); } catch(e){ return {}; } }
-function incStat(n){ 
-  const s=getStats(); s[n]=(s[n]||0)+1; localStorage.setItem('gs_v4', JSON.stringify(s));
-  if(window.incStatShared) window.incStatShared(n);
-  if(window.incTotalSearchCount) window.incTotalSearchCount();
-  updateTotalCount();
-}
-
-async function updateTotalCount(){
-  if(!window.getTotalSearchCount) return;
-  const total = await window.getTotalSearchCount();
-  const el = document.getElementById('totalSearchCount');
-  if(el) el.textContent = total.toLocaleString('fr-FR');
-}
-function getTop(n){ n=n||10; return Object.entries(getStats()).sort(function(a,b){return b[1]-a[1];}).slice(0,n); }
-
-// Charger les stats partagées depuis Firebase au démarrage
-async function loadSharedStats() {
-  if(!window.getTopShared) return;
-  const top = await window.getTopShared(50);
-  if(!top.length) return;
-  const s = getStats();
-  top.forEach(function(item){
-    const name = item[0], count = item[1];
-    // Prendre le max entre local et Firebase
-    s[name] = Math.max(s[name]||0, count);
-  });
-  localStorage.setItem('gs_v4', JSON.stringify(s));
-  renderTop();
-}
-
-// Search
-function buildResult(m){
-  const now = nowMin();
-  let bestNext = null, bestCid = null;
-  m.carriers.forEach(function(c){
-    const nd = nextDep(c);
-    if(nd !== null && (bestNext === null || nd < bestNext)){ bestNext = nd; bestCid = c.id; }
-  });
-  const diff = bestNext !== null ? bestNext - now : null;
-  const isUrgent = diff !== null && diff <= 15;
-  const isSoon = diff !== null && diff <= 30;
-
-  let nextBlock;
-  if(bestNext !== null){
-    nextBlock = '<div class="result-next">' +
-      '<div><div class="result-next-label">Prochain départ</div>' +
-      '<div class="result-next-time">' + fmt(bestNext) + '</div>' +
-      '<div class="result-next-who">' + CARRIERS[bestCid].label + '</div></div>' +
-      '<div class="result-next-countdown' + (isUrgent?' urgent':isSoon?' verysoon':'') + '">' + fmtCD(diff) + '</div>' +
-      '</div>';
-  } else {
-    nextBlock = '<div class="result-next"><span style="color:var(--muted);font-size:12px;font-family:DM Mono,monospace">Plus de départ aujourd\'hui</span></div>';
-  }
-
-  const rows = m.carriers.map(function(c){
-    const carr = CARRIERS[c.id]; if(!carr) return '';
-    const st = carrierSt(c);
-    let statusHtml = '';
-    if(st.s === 'imminent') statusHtml = '<span class="dep-status s-urgent">🚨 ' + st.diff + ' min</span>';
-    else if(st.s === 'soon') statusHtml = '<span class="dep-status s-soon">⚡ ' + st.diff + ' min</span>';
-    else if(st.s === 'past') statusHtml = '<span class="dep-status s-past">Terminé</span>';
-    else statusHtml = '<span class="dep-status s-upcoming">→ ' + fmt(st.next) + '</span>';
-    return '<div class="result-carrier-row">' +
-      '<span class="carrier-pill pill-' + c.id + '">' + carr.label + '</span>' +
-      '<span class="dep-times">✈ ' + c.deps.join(' · ') + '</span>' +
-      statusHtml + '</div>';
-  }).join('');
-
-  const safeName = m.g.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  return '<div class="result-item" onclick="onResultClick(\'' + safeName + '\')">' +
-    '<div class="result-garage">' + m.g + '</div>' +
-    nextBlock +
-    '<div class="result-carriers">' + rows + '</div></div>';
-}
-
-const searchInput = document.getElementById('searchInput');
-const searchResults = document.getElementById('searchResults');
-const searchClear = document.getElementById('searchClear');
-
-function doSearch(q){
-  const nq = normalize(q.trim());
-  if(!nq){ searchResults.style.display='none'; searchClear.style.display='none'; return; }
-  searchClear.style.display = 'block';
-  const matches = GARAGES_DATA.filter(function(g){ return normalize(g.g).includes(nq); });
-  searchResults.innerHTML = matches.length ? matches.map(buildResult).join('') : '<div class="no-result">Aucun garage trouvé</div>';
-  searchResults.style.display = 'block';
-}
-function onResultClick(n){ incStat(n); renderTop(); searchInput.value=n; doSearch(n); }
-function clearSearch(){ searchInput.value=''; searchResults.style.display='none'; searchClear.style.display='none'; searchInput.focus(); }
-searchInput.addEventListener('input', function(e){ doSearch(e.target.value); });
-
-// Timeline tap support for mobile
-document.getElementById('timelinePoints').addEventListener('click', function(e){
-  const point = e.target.closest('.timeline-point');
-  if(!point) return;
-  document.querySelectorAll('.timeline-point.tapped').forEach(function(p){ if(p!==point) p.classList.remove('tapped'); });
-  point.classList.toggle('tapped');
-});
-searchInput.addEventListener('keydown', function(e){ if(e.key==='Escape') clearSearch(); });
-document.getElementById('searchClear').addEventListener('click', clearSearch);
-
-// Top garages
-function renderTop(){
-  const top = getTop(10);
-  const el = document.getElementById('topGarages');
-  if(!top.length){
-    el.innerHTML = '<em style="color:var(--muted);font-size:12px">Les garages les plus recherchés apparaîtront ici automatiquement...</em>';
-    return;
-  }
-  const now = nowMin();
-  el.innerHTML = top.map(function(item){
-    const name = item[0], count = item[1];
-    const gd = GARAGES_DATA.find(function(g){ return g.g === name; });
-    const urgent = gd && gd.carriers.some(function(c){ const nd=nextDep(c); return nd!==null && nd-now<=30; });
-    const safeName = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    return '<button class="top-chip' + (urgent?' urgent':'') + '" onclick="onChipClick(\'' + safeName + '\')">' +
-      name + '<span class="chip-count">' + count + '</span></button>';
-  }).join('');
-}
-function onChipClick(n){ searchInput.value=n; doSearch(n); incStat(n); renderTop(); searchInput.scrollIntoView({behavior:'smooth',block:'center'}); }
-
-// Hero
-function renderHero(){
-  const now = nowMin();
-  let best = null;
-  Object.keys(CARRIER_DEPS).forEach(function(cid){
-    CARRIER_DEPS[cid].forEach(function(d){
-      const t = parseTime(d);
-      if(t > now && (best === null || t < best.t)) best = {t:t, cid:cid};
-    });
-  });
-
-  const heroName = document.getElementById('heroName');
-  const heroTime = document.getElementById('heroTime');
-  const heroCD = document.getElementById('heroCountdown');
-  const heroSub = document.getElementById('heroSub');
-  const banner = document.getElementById('imminentBanner');
-
-  if(!best){
-    heroName.textContent = 'Terminé';
-    heroTime.textContent = '—';
-    heroCD.textContent = '';
-    heroSub.textContent = 'Reprise demain à 06h00';
-    heroName.className = 'hero-name';
-    heroCD.className = 'hero-countdown';
-    banner.className = 'imminent-banner';
-    banner.textContent = '';
-    return;
-  }
-
-  const diff = best.t - now;
-  heroName.textContent = CARRIERS[best.cid].label;
-  heroTime.textContent = fmt(best.t);
-  heroCD.textContent = fmtCD(diff);
-  heroSub.textContent = '';
-  heroName.className = 'hero-name' + (diff <= 15 ? ' imminent' : '');
-  heroCD.className = 'hero-countdown' + (diff <= 15 ? ' imminent' : '');
-
-  // Bannière toujours visible avec le prochain départ
-  if(diff <= 15){
-    banner.className = 'imminent-banner show urgent';
-    banner.textContent = '🚨 DÉPART IMMINENT — ' + CARRIERS[best.cid].label + ' — ' + fmt(best.t) + ' — ' + diff + ' MIN';
-  } else {
-    banner.className = 'imminent-banner show';
-    banner.textContent = '🚀 PROCHAIN DÉPART — ' + CARRIERS[best.cid].label + ' — ' + fmt(best.t);
-  }
-}
-
-// Timeline
-function renderTimeline(){
-  const now = nowMin();
-  const START = toMin(6,0), END = toMin(18,30), range = END - START;
-  const pct = Math.max(0, Math.min(100, (now - START) / range * 100));
-
-  document.getElementById('timelineProgress').style.width = pct + '%';
-  document.getElementById('timelineTruck').style.left = Math.max(2, Math.min(96, pct)) + '%';
-
-  // Group deps by unique time
-  const allDeps = {};
-  Object.keys(CARRIER_DEPS).forEach(function(cid){
-    CARRIER_DEPS[cid].forEach(function(d){
-      if(!allDeps[d]) allDeps[d] = {t: parseTime(d), carriers: []};
-      allDeps[d].carriers.push(cid);
-    });
-  });
-
-  // Find next departure time
-  const futureTimes = Object.values(allDeps).filter(function(info){ return info.t > now; });
-  const nextTime = futureTimes.length ? Math.min.apply(null, futureTimes.map(function(i){ return i.t; })) : null;
-
-  const container = document.getElementById('timelinePoints');
-  container.innerHTML = Object.entries(allDeps).map(function(entry){
-    const time = entry[0], info = entry[1];
-    const depPct = Math.max(1, Math.min(99, (info.t - START) / range * 100));
-    const isPast = info.t <= now;
-    const isNext = nextTime !== null && info.t === nextTime;
-    const diff = info.t - now;
-    const isSoon = !isPast && diff <= 30;
-    const dotClass = isPast ? 'past' : (isNext || isSoon) ? 'next' : 'future';
-    const timeClass = isPast ? 'past' : (isNext || isSoon) ? 'next' : '';
-    return '<div class="timeline-point" style="left:' + depPct + '%;top:50%;transform:translate(-50%,-50%)">' +
-      '<div class="timeline-dot ' + dotClass + '"></div>' +
-      '<div class="timeline-time ' + timeClass + '">' + time + '</div>' +
-      '</div>';
-  }).join('');
-}
-
-// Carriers list
-function renderCarriers(){
-  const now = nowMin();
-
-  // Trouver LE prochain départ global (un seul dans toute la liste)
-  let globalNextTime = null, globalNextCid = null;
-  Object.keys(CARRIER_DEPS).forEach(function(cid){
-    CARRIER_DEPS[cid].forEach(function(d){
-      const t = parseTime(d);
-      if(t > now && (globalNextTime === null || t < globalNextTime)){
-        globalNextTime = t;
-        globalNextCid = cid;
-      }
-    });
-  });
-
-  const list = document.getElementById('carriersList');
-  list.innerHTML = Object.keys(CARRIERS).map(function(cid){
-    const c = CARRIERS[cid];
-    const deps = CARRIER_DEPS[cid] || [];
-    const depMins = deps.map(parseTime);
-    const upcoming = depMins.filter(function(t){ return t > now; });
-    const past = depMins.filter(function(t){ return t <= now; });
-    const isDone = upcoming.length === 0;
-    const nxt = upcoming.length ? Math.min.apply(null, upcoming) : null;
-    const diff = nxt ? nxt - now : null;
-    const isImminent = diff !== null && diff <= 15;
-    const isSoon = diff !== null && diff <= 30;
-
-    let rowClass = '', statusText = '';
-    if(isDone){ rowClass = 'c-done'; statusText = 'Terminé'; }
-    else if(past.length > 0){ rowClass = 'c-active'; statusText = 'En tournée'; }
-    else { statusText = ''; }
-
-    const pillsHtml = deps.map(function(d){
-      const t = parseTime(d);
-      let cls = 'dep-future';
-      if(t <= now) cls = 'dep-past';
-      else if(t === globalNextTime && cid === globalNextCid) cls = 'dep-THE-ONE';
-      return '<span class="dep-pill ' + cls + '">' + d + '</span>';
-    }).join('');
-
-    const nb = GARAGES_DATA.filter(function(g){ return g.carriers.some(function(car){ return car.id === cid; }); }).length;
-
-    // Build garage tags for this carrier
-    const garageList = GARAGES_DATA.filter(function(g){
-      return g.carriers.some(function(car){ return car.id === cid; });
-    });
-    const garageTagsHtml = garageList.map(function(g){
-      const carrData = g.carriers.find(function(car){ return car.id === cid; });
-      if(!carrData) return '<span class="garage-name-tag" onclick="searchGarage(\'' + g.g.replace(/'/g,"\\'") + '\')" style="cursor:pointer">' + g.g + '</span>';
-      const now2 = nowMin();
-      const depMins2 = carrData.deps.map(parseTime);
-      const upcoming2 = depMins2.filter(function(t){ return t > now2; });
-      const nxt2 = upcoming2.length ? Math.min.apply(null, upcoming2) : null;
-      const diff2 = nxt2 ? nxt2 - now2 : null;
-      let tagClass = '';
-      if(diff2 !== null && diff2 <= 15) tagClass = 'imminent';
-      else if(diff2 !== null && diff2 <= 30) tagClass = 'soon';
-      return '<span class="garage-name-tag ' + tagClass + '" onclick="searchGarage(\'' + g.g.replace(/'/g,"\\'") + '\')" style="cursor:pointer">' + g.g + '</span>';
-    }).join('');
-
-    return '<div class="carrier-row ' + rowClass + '" onclick="toggleCarrier(\'' + cid + '\')" id="row-' + cid + '">' +
-      '<div class="carrier-row-name">' + c.label + '</div>' +
-      '<div class="carrier-row-deps">' + pillsHtml + '</div>' +
-      '<div class="carrier-row-status">' + statusText + '</div>' +
-      '<div class="carrier-row-count">' + nb + ' garages</div>' +
-      '<div class="carrier-row-chevron">▼</div>' +
-      '</div>' +
-      '<div class="carrier-garages-panel" id="panel-' + cid + '">' +
-      '<div class="carrier-garages-inner">' + garageTagsHtml + '</div>' +
-      '</div>';
-  }).join('');
-}
-
-// Clock
-function renderClock(){
-  const now = new Date();
-  const hms = [now.getHours(), now.getMinutes(), now.getSeconds()].map(function(v){ return String(v).padStart(2,'0'); }).join(':');
-  document.getElementById('heroClock').textContent = hms;
-}
-
-// Click on garage tag -> scroll to search and show result
-function searchGarage(name){
-  searchInput.value = name;
-  doSearch(name);
-  incStat(name);
-  renderTop();
-  searchInput.scrollIntoView({behavior:'smooth', block:'center'});
-}
-
-// Track open panels
-const openPanels = new Set();
-
-function toggleCarrier(cid){
-  const row = document.getElementById('row-' + cid);
-  const panel = document.getElementById('panel-' + cid);
-  if(!row || !panel) return;
-  if(openPanels.has(cid)){
-    openPanels.delete(cid);
-    row.classList.remove('open');
-    panel.classList.remove('open');
-  } else {
-    openPanels.add(cid);
-    row.classList.add('open');
-    panel.classList.add('open');
-  }
-}
-
-function renderAll(){ renderHero(); renderTimeline(); renderCarriers(); renderTop(); checkNotifs(); }
-
-// ── ADMIN ─────────────────────────────────────────────────────────────────────
-const ADMIN_PWD = 'livraisonont@p';
-
-function openAdmin(){
-  document.getElementById('adminOverlay').classList.add('show');
-  document.getElementById('adminLogin').style.display = 'block';
-  document.getElementById('adminPanel').style.display = 'none';
-  document.getElementById('adminPwd').value = '';
-  document.getElementById('adminLoginMsg').className = 'admin-msg';
-}
-function closeAdmin(){
-  document.getElementById('adminOverlay').classList.remove('show');
-}
-function checkAdminPwd(){
-  const pwd = document.getElementById('adminPwd').value;
-  if(pwd === ADMIN_PWD){
-    document.getElementById('adminLogin').style.display = 'none';
-    document.getElementById('adminPanel').style.display = 'block';
-    renderAdminList();
-    // Enable/disable deps inputs based on checkboxes
-    ['serge','lande','pb','bearn','hendaye','ace'].forEach(function(cid){
-      const chk = document.getElementById('chk-'+cid);
-      const deps = document.getElementById('deps-'+cid);
-      chk.addEventListener('change', function(){ deps.disabled = !chk.checked; });
-    });
-  } else {
-    const msg = document.getElementById('adminLoginMsg');
-    msg.textContent = 'Mot de passe incorrect';
-    msg.className = 'admin-msg err';
-  }
-}
-
-function adminAddGarage(){
-  const name = document.getElementById('adminGarageName').value.trim();
-  const msg = document.getElementById('adminAddMsg');
-  if(!name){ msg.textContent = 'Saisis un nom de garage'; msg.className = 'admin-msg err'; return; }
-
-  const carriers = [];
-  ['serge','lande','pb','bearn','hendaye','ace'].forEach(function(cid){
-    const chk = document.getElementById('chk-'+cid);
-    if(chk.checked){
-      const depsVal = document.getElementById('deps-'+cid).value.trim();
-      const deps = depsVal ? depsVal.split(',').map(function(d){ return d.trim(); }) : [];
-      carriers.push({id: cid, deps: deps});
-    }
-  });
-
-  if(!carriers.length){ msg.textContent = 'Sélectionne au moins un transporteur'; msg.className = 'admin-msg err'; return; }
-
-  // Check if already exists
-  const exists = GARAGES_DATA.find(function(g){ return g.g.toLowerCase() === name.toLowerCase(); });
-  if(exists){ msg.textContent = 'Ce garage existe déjà !'; msg.className = 'admin-msg err'; return; }
-
-  // Add to local array
-  GARAGES_DATA.push({g: name, carriers: carriers});
-  GARAGES_DATA.sort(function(a,b){ return a.g.localeCompare(b.g); });
-
-  // Save to Firebase
-  if(window.saveGarageToSupabase) window.saveGarageToSupabase(name, carriers);
-
-  msg.textContent = '✓ ' + name + ' ajouté avec succès !';
-  msg.className = 'admin-msg ok';
-
-  // Reset form
-  document.getElementById('adminGarageName').value = '';
-  ['serge','lande','pb','bearn','hendaye','ace'].forEach(function(cid){
-    document.getElementById('chk-'+cid).checked = false;
-    document.getElementById('deps-'+cid).value = '';
-    document.getElementById('deps-'+cid).disabled = true;
-  });
-
-  renderAdminList();
-  renderCarriers();
-}
-
-function adminDeleteGarage(name){
-  if(!confirm('Supprimer "' + name + '" ?')) return;
-  const idx = GARAGES_DATA.findIndex(function(g){ return g.g === name; });
-  if(idx !== -1) GARAGES_DATA.splice(idx, 1);
-  if(window.deleteGarageFromSupabase) window.deleteGarageFromSupabase(name);
-  renderAdminList();
-  renderCarriers();
-}
-
-function renderAdminList(){
-  const q = (document.getElementById('adminDeleteSearch').value||'').toLowerCase();
-  const list = document.getElementById('adminGarageList');
-  const filtered = GARAGES_DATA.filter(function(g){ return g.g.toLowerCase().includes(q); });
-  list.innerHTML = filtered.map(function(g){
-    const carrierNames = g.carriers.map(function(c){ return CARRIERS[c.id]?CARRIERS[c.id].label:c.id; }).join(', ');
-    const safeName = g.g.replace(/'/g,"\'");
-    return '<div class="admin-garage-item">' +
-      '<div><div style="font-weight:600">' + g.g + '</div>' +
-      '<div style="font-size:11px;color:var(--muted);font-family:DM Mono,monospace">' + carrierNames + '</div></div>' +
-      '<div>' +
-      '<button class="btn-edit" onclick="adminEditGarage(\'' + safeName + '\')">Modifier</button>' +
-      '<button onclick="adminDeleteGarage(\'' + safeName + '\')">Supprimer</button>' +
-      '</div></div>';
-  }).join('');
-}
-
-// ── EDIT GARAGE ──────────────────────────────────────────────────────────────
-var currentEditName = null;
-
-function adminEditGarage(name){
-  currentEditName = name;
-  const gd = GARAGES_DATA.find(function(g){ return g.g === name; });
-  if(!gd) return;
-
-  document.getElementById('editGarageName').textContent = name;
-
-  // Reset all
-  ['serge','lande','pb','bearn','hendaye','ace'].forEach(function(cid){
-    const chk = document.getElementById('echk-'+cid);
-    const deps = document.getElementById('edeps-'+cid);
-    chk.checked = false;
-    deps.value = '';
-    deps.disabled = true;
-    // Re-attach listener
-    chk.onchange = function(){ deps.disabled = !chk.checked; };
-  });
-
-  // Fill with current data
-  gd.carriers.forEach(function(c){
-    const chk = document.getElementById('echk-'+c.id);
-    const deps = document.getElementById('edeps-'+c.id);
-    if(chk){
-      chk.checked = true;
-      deps.disabled = false;
-      deps.value = c.deps.join(',');
-    }
-  });
-
-  document.getElementById('adminEditModal').classList.add('show');
-  document.getElementById('adminEditMsg').className = 'admin-msg';
-  document.getElementById('adminEditModal').scrollIntoView({behavior:'smooth'});
-}
-
-function adminSaveEdit(){
-  if(!currentEditName) return;
-  const msg = document.getElementById('adminEditMsg');
-
-  const carriers = [];
-  ['serge','lande','pb','bearn','hendaye','ace'].forEach(function(cid){
-    const chk = document.getElementById('echk-'+cid);
-    if(chk.checked){
-      const depsVal = document.getElementById('edeps-'+cid).value.trim();
-      const deps = depsVal ? depsVal.split(',').map(function(d){ return d.trim(); }) : [];
-      carriers.push({id: cid, deps: deps});
-    }
-  });
-
-  if(!carriers.length){ msg.textContent = 'Sélectionne au moins un transporteur'; msg.className = 'admin-msg err'; return; }
-
-  const idx = GARAGES_DATA.findIndex(function(g){ return g.g === currentEditName; });
-  if(idx !== -1) GARAGES_DATA[idx].carriers = carriers;
-
-  if(window.saveGarageToSupabase) window.saveGarageToSupabase(currentEditName, carriers);
-
-  msg.textContent = '✓ ' + currentEditName + ' modifié !';
-  msg.className = 'admin-msg ok';
-
-  renderAdminList();
-  renderCarriers();
-
-  setTimeout(function(){
-    document.getElementById('adminEditModal').classList.remove('show');
-    currentEditName = null;
-  }, 1500);
-}
-
-// Ouvrir admin avec hash #admin
-window.addEventListener('hashchange', function(){
-  if(window.location.hash === '#admin') openAdmin();
-});
-
-// Attendre que tout soit chargé avant de vérifier le hash
-window.addEventListener('load', function(){
-  if(window.location.hash === '#admin') openAdmin();
-});
-
-// Bouton admin caché - 4 clics
-var adminClickCount = 0;
-var adminClickTimer = null;
-document.getElementById('adminTrigger').addEventListener('click', function(){
-  adminClickCount++;
-  clearTimeout(adminClickTimer);
-  if(adminClickCount >= 4){
-    adminClickCount = 0;
-    openAdmin();
-  } else {
-    adminClickTimer = setTimeout(function(){ adminClickCount = 0; }, 2000);
-  }
-});
-
-function renderAllKeepOpen(){
-  renderHero(); renderTimeline(); renderTop(); checkNotifs();
-  renderCarriers();
-  // Re-open panels that were open
-  openPanels.forEach(function(cid){
-    const row = document.getElementById('row-' + cid);
-    const panel = document.getElementById('panel-' + cid);
-    if(row) row.classList.add('open');
-    if(panel) panel.classList.add('open');
-  });
-}
-
-// Expose pour Supabase
-window.GARAGES_DATA_REF = GARAGES_DATA;
-window.renderCarriers = renderCarriers;
-window.renderTop = renderTop;
-
-renderAllKeepOpen();
-setInterval(renderClock, 1000);
-setInterval(function(){ if(searchInput.value) doSearch(searchInput.value); }, 30000);
-setInterval(renderAllKeepOpen, 15000);
-
-// Charger les données depuis Supabase au démarrage
-window.addEventListener('load', function(){
-  // Attendre que le script Supabase soit prêt
-  setTimeout(function(){
-    if(window.loadGaragesFromSupabase) window.loadGaragesFromSupabase();
-    if(window.getTopShared) loadSharedStats();
-    updateTotalCount();
-  }, 800);
-  // Sync stats toutes les 5 minutes
-  setInterval(function(){
-    if(window.getTopShared) loadSharedStats();
-    updateTotalCount();
-  }, 300000);
-});
-</script>
 </body>
 </html>

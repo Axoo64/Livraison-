@@ -619,7 +619,7 @@
     <button class="gtab" data-cat="impression">Impression</button>
   </div>
 
-  <div class="g-grid" id="galleryGrid"></div>
+  <div class="gallery-panels" id="galleryPanels"></div>
 </section>
 
 <section id="mariage">
@@ -806,17 +806,42 @@ const galleries = {
   ],
 };
 
-const galleryGrid = document.getElementById('galleryGrid');
-function renderGallery(cat){
-  galleryGrid.innerHTML = '';
+// Les 5 galeries sont construites une seule fois au chargement, puis on se
+// contente de montrer/cacher la bonne au clic sur un onglet. Avant, chaque
+// clic vidait et reconstruisait entièrement la grille : les vignettes
+// "rechargeaient" et rejouaient leur animation d'entrée à chaque fois, même
+// en revenant sur un onglet déjà vu l'instant d'avant — d'où l'effet bizarre
+// remonté. Maintenant, l'animation d'entrée (gérée par le système de reveal
+// au scroll, plus bas) ne joue qu'une fois par vignette, la toute première
+// fois qu'elle devient visible.
+const galleryPanels = document.getElementById('galleryPanels');
+const galleryGridsByCat = {};
+
+function buildGalleryGrid(cat){
+  const grid = document.createElement('div');
+  grid.className = 'g-grid';
+  grid.dataset.cat = cat;
   galleries[cat].forEach(([file, label], i) => {
     const div = document.createElement('div');
-    div.className = 'g-item reveal';
+    div.className = 'g-item';
     const thumb = `https://static.wixstatic.com/media/${file}/v1/fill/w_500,h_500,q_72,enc_auto/${file}`;
     div.innerHTML = `<img src="${thumb}" alt="${label}" loading="lazy" width="500" height="500"><div class="g-label">${label}</div>`;
     div.addEventListener('click', () => openLightbox(cat, i));
-    galleryGrid.appendChild(div);
-    requestAnimationFrame(() => div.classList.add('in-view'));
+    grid.appendChild(div);
+  });
+  return grid;
+}
+
+Object.keys(galleries).forEach(cat => {
+  const grid = buildGalleryGrid(cat);
+  if(cat !== 'covering') grid.style.display = 'none';
+  galleryPanels.appendChild(grid);
+  galleryGridsByCat[cat] = grid;
+});
+
+function showGalleryCat(cat){
+  Object.entries(galleryGridsByCat).forEach(([c, grid]) => {
+    grid.style.display = c === cat ? '' : 'none';
   });
 }
 
@@ -856,21 +881,12 @@ document.addEventListener('keydown', e => {
   if(e.key === 'ArrowLeft') lbPrev();
 });
 
-renderGallery('covering');
 document.getElementById('gtabs').addEventListener('click', e => {
   const btn = e.target.closest('.gtab');
   if(!btn || btn.classList.contains('active')) return;
   document.querySelectorAll('.gtab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-    renderGallery(btn.dataset.cat);
-    return;
-  }
-  galleryGrid.style.opacity = '0';
-  setTimeout(() => {
-    renderGallery(btn.dataset.cat);
-    galleryGrid.style.opacity = '1';
-  }, 180);
+  showGalleryCat(btn.dataset.cat);
 });
 
 // ===== Navigation mobile (hamburger + panneau) =====
@@ -940,7 +956,7 @@ function goToGalleryTab(cat){
   if(tabBtn){
     document.querySelectorAll('.gtab').forEach(t => t.classList.remove('active'));
     tabBtn.classList.add('active');
-    renderGallery(cat);
+    showGalleryCat(cat);
   }
 }
 document.querySelectorAll('.serv-card[data-goto]').forEach(card => {

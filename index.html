@@ -900,15 +900,25 @@ sections.forEach(s => navObserver.observe(s));
 // ===== Barre de progression du rail (un seul listener, léger, rAF-batched) =====
 const routeFill = document.getElementById('routeFill');
 let ticking = false;
+// scrollHeight force un recalcul de mise en page à chaque lecture : on le met
+// en cache et on ne le rafraîchit qu'au chargement/redimensionnement, jamais
+// à chaque frame de scroll (sinon on entre en concurrence avec les animations
+// de reveal et les IntersectionObserver qui tournent au même moment).
+let cachedScrollable = 1;
+function refreshScrollable(){
+  cachedScrollable = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+}
 function updateProgress(){
-  const scrollable = document.documentElement.scrollHeight - window.innerHeight;
-  const pct = Math.min(Math.max(window.scrollY / scrollable, 0), 1) * 100;
+  const pct = Math.min(Math.max(window.scrollY / cachedScrollable, 0), 1) * 100;
   routeFill.style.height = pct + '%';
   ticking = false;
 }
 window.addEventListener('scroll', () => {
   if(!ticking){ requestAnimationFrame(updateProgress); ticking = true; }
 }, {passive:true});
+window.addEventListener('resize', refreshScrollable);
+window.addEventListener('load', refreshScrollable);
+refreshScrollable();
 updateProgress();
 
 // ===== FORMULAIRE — validation + envoi réel (mailto) + confirmation =====
@@ -1047,19 +1057,29 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').match
 })();
 
 // ===== CURSEUR PERSONNALISÉ — point qui suit la souris, anneau qui rattrape en douceur =====
+// Deux optimisations volontaires par rapport à une version naïve :
+// 1. Déplacement par `transform` (translate3d) plutôt que `left`/`top` — le
+//    transform est géré par le compositeur/GPU et ne force jamais de recalcul
+//    de mise en page, contrairement à left/top qui coûtent un reflow à
+//    chaque frame.
+// 2. La boucle d'interpolation de l'anneau s'arrête d'elle-même dès qu'elle a
+//    rattrapé la souris, au lieu de tourner indéfiniment (même souris
+//    immobile) et de consommer du temps CPU en continu, y compris pendant un
+//    scroll ou une autre animation.
 if(!reduceMotion && window.matchMedia('(pointer:fine)').matches){
   const cursorDot = document.getElementById('cursorDot');
   const cursorRing = document.getElementById('cursorRing');
   let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
   let ringX = mouseX, ringY = mouseY;
+  let ringLoopRunning = false;
 
   window.addEventListener('mousemove', e => {
     mouseX = e.clientX; mouseY = e.clientY;
-    cursorDot.style.left = mouseX + 'px';
-    cursorDot.style.top = mouseY + 'px';
+    cursorDot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
     cursorDot.style.opacity = '1';
     cursorRing.style.opacity = '1';
-  });
+    if(!ringLoopRunning){ ringLoopRunning = true; requestAnimationFrame(ringLoop); }
+  }, {passive:true});
   document.addEventListener('mouseleave', () => {
     cursorDot.style.opacity = '0';
     cursorRing.style.opacity = '0';
@@ -1068,11 +1088,11 @@ if(!reduceMotion && window.matchMedia('(pointer:fine)').matches){
   function ringLoop(){
     ringX += (mouseX - ringX) * 0.18;
     ringY += (mouseY - ringY) * 0.18;
-    cursorRing.style.left = ringX + 'px';
-    cursorRing.style.top = ringY + 'px';
+    cursorRing.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
+    const settled = Math.abs(mouseX - ringX) < 0.05 && Math.abs(mouseY - ringY) < 0.05;
+    if(settled){ ringLoopRunning = false; return; }
     requestAnimationFrame(ringLoop);
   }
-  ringLoop();
 
   document.querySelectorAll('a, button, .serv-card, .g-item, .route-stop, .gtab').forEach(el => {
     el.addEventListener('mouseenter', () => cursorRing.classList.add('hover'));

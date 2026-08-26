@@ -658,7 +658,7 @@
         <textarea id="inputMessage" name="message" placeholder="Marque, modèle, année du véhicule..."></textarea>
         <div class="field-error">Merci de décrire brièvement votre demande.</div>
       </div>
-      <button class="btn fill" type="submit" style="align-self:flex-start; border:none;">Envoyer</button>
+      <button class="btn fill" type="submit" id="contactSubmit" style="align-self:flex-start; border:none;">Envoyer</button>
     </form>
     <div class="form-confirm" id="formConfirm">
       <div class="fc-icon">✓</div>
@@ -698,42 +698,42 @@ const galleries = {
   ],
   ppf: [
     ["81cf68_5cd9948e121c4700b534f52cedf7e12f~mv2.jpg", "Protection carrosserie PPF"],
-    ["81cf68_8542d40d668446f3969ebca46f9d6183~mv2.jpg", "Pose PPF BodyFence"],
-    ["81cf68_98b75c19f9c64f0d945c5dac6db5fb38~mv2.jpg", "Pose PPF BodyFence"],
-    ["81cf68_ad1e9072472d4615911ef1de8dbf4893~mv2.jpg", "Pose PPF BodyFence"],
-    ["81cf68_ad7e7890dec84feb9407e544f9cbe1d8~mv2.jpg", "Pose PPF BodyFence"],
-    ["81cf68_8f6c6c79c4954597951ed3631d53e3ba~mv2.jpg", "Pose PPF BodyFence"],
-    ["81cf68_67965c06018c42908a8cef3b31d61633~mv2.jpg", "Pose PPF BodyFence"],
-    ["81cf68_53043a863be94f438057eb66704ea5bb~mv2.jpg", "Pose PPF BodyFence"],
+    ["81cf68_8542d40d668446f3969ebca46f9d6183~mv2.jpg", "Pose PPF BodyFence — véhicule 1"],
+    ["81cf68_98b75c19f9c64f0d945c5dac6db5fb38~mv2.jpg", "Pose PPF BodyFence — véhicule 2"],
+    ["81cf68_ad1e9072472d4615911ef1de8dbf4893~mv2.jpg", "Pose PPF BodyFence — véhicule 3"],
+    ["81cf68_ad7e7890dec84feb9407e544f9cbe1d8~mv2.jpg", "Pose PPF BodyFence — véhicule 4"],
+    ["81cf68_8f6c6c79c4954597951ed3631d53e3ba~mv2.jpg", "Pose PPF BodyFence — véhicule 5"],
+    ["81cf68_67965c06018c42908a8cef3b31d61633~mv2.jpg", "Pose PPF BodyFence — véhicule 6"],
+    ["81cf68_53043a863be94f438057eb66704ea5bb~mv2.jpg", "Pose PPF BodyFence — véhicule 7"],
   ],
   "vitres-auto": [
-    ["81cf68_8345900b8a4e429ca950d8aee3663034~mv2.jpg", "Vitres teintées auto"],
-    ["81cf68_5689c8ab1c7f4866898b2c5798cb34be~mv2.jpg", "Vitres teintées auto"],
-    ["81cf68_30a152fa31a84d1eb2a93e1507af9f5d~mv2.jpg", "Vitres teintées auto"],
-    ["81cf68_ec09f14120f6441697af18987603ac4f~mv2.jpg", "Vitres teintées auto"],
-    ["81cf68_223cfd66f5d143cca41d99b3e34b1d8d~mv2.jpg", "Vitres teintées auto"],
-    ["81cf68_5022916fb95b487faf1765b3e91f638f~mv2.jpg", "Vitres teintées auto"],
-    ["81cf68_90ce0b112c8940419ac2098c6aff7569~mv2.jpg", "Vitres teintées auto"],
-    ["81cf68_38716152d0d04e45a90d541de4e88b67~mv2.jpg", "Vitres teintées auto"],
+    ["81cf68_8345900b8a4e429ca950d8aee3663034~mv2.jpg", "Vitres teintées auto — véhicule 1"],
+    ["81cf68_5689c8ab1c7f4866898b2c5798cb34be~mv2.jpg", "Vitres teintées auto — véhicule 2"],
+    ["81cf68_30a152fa31a84d1eb2a93e1507af9f5d~mv2.jpg", "Vitres teintées auto — véhicule 3"],
+    ["81cf68_ec09f14120f6441697af18987603ac4f~mv2.jpg", "Vitres teintées auto — véhicule 4"],
+    ["81cf68_223cfd66f5d143cca41d99b3e34b1d8d~mv2.jpg", "Vitres teintées auto — véhicule 5"],
+    ["81cf68_5022916fb95b487faf1765b3e91f638f~mv2.jpg", "Vitres teintées auto — véhicule 6"],
+    ["81cf68_90ce0b112c8940419ac2098c6aff7569~mv2.jpg", "Vitres teintées auto — véhicule 7"],
+    ["81cf68_38716152d0d04e45a90d541de4e88b67~mv2.jpg", "Vitres teintées auto — véhicule 8"],
   ],
   "vitres-batiment": [
-    ["81cf68_613272215dad45c089e082405b8e4093~mv2.jpg", "Vitres teintées bâtiment"],
-    ["81cf68_ac9fb670ec914b37943f8bc77e8d57ff~mv2.jpg", "Vitres teintées bâtiment"],
-    ["81cf68_70b8aee417e14fe4a4a6c6fdfc7d0372~mv2.jpg", "Vitres teintées bâtiment"],
-    ["81cf68_c5a3c9a24a8c400a87aad107740a9b66~mv2.jpg", "Vitres teintées bâtiment"],
-    ["81cf68_324a1b56c467499b8fc2c05281f3af28~mv2.jpg", "Vitres teintées bâtiment"],
-    ["81cf68_a5e5fb32524b4c3692e049e2297bcdfe~mv2.jpg", "Vitres teintées bâtiment"],
-    ["81cf68_253b2b467e5145ae8fa2f8d5e3d2c85b~mv2.jpg", "Vitres teintées bâtiment"],
-    ["81cf68_835a6dab1e354b28807942ec9551c7d0~mv2.jpg", "Vitres teintées bâtiment"],
+    ["81cf68_613272215dad45c089e082405b8e4093~mv2.jpg", "Vitres teintées bâtiment — chantier 1"],
+    ["81cf68_ac9fb670ec914b37943f8bc77e8d57ff~mv2.jpg", "Vitres teintées bâtiment — chantier 2"],
+    ["81cf68_70b8aee417e14fe4a4a6c6fdfc7d0372~mv2.jpg", "Vitres teintées bâtiment — chantier 3"],
+    ["81cf68_c5a3c9a24a8c400a87aad107740a9b66~mv2.jpg", "Vitres teintées bâtiment — chantier 4"],
+    ["81cf68_324a1b56c467499b8fc2c05281f3af28~mv2.jpg", "Vitres teintées bâtiment — chantier 5"],
+    ["81cf68_a5e5fb32524b4c3692e049e2297bcdfe~mv2.jpg", "Vitres teintées bâtiment — chantier 6"],
+    ["81cf68_253b2b467e5145ae8fa2f8d5e3d2c85b~mv2.jpg", "Vitres teintées bâtiment — chantier 7"],
+    ["81cf68_835a6dab1e354b28807942ec9551c7d0~mv2.jpg", "Vitres teintées bâtiment — chantier 8"],
   ],
   impression: [
     ["81cf68_6d0420ebc78349999cd2e1abc9049f7c~mv2.jpg", "Roll-up 100% personnalisable"],
-    ["81cf68_d292dbba58b749a58efc2fdde175d687~mv2.jpg", "Impression numérique"],
-    ["81cf68_50998c41f58b48549b9da2be47edf44e~mv2.jpg", "Impression numérique"],
+    ["81cf68_d292dbba58b749a58efc2fdde175d687~mv2.jpg", "Impression numérique — décoration mariage"],
+    ["81cf68_50998c41f58b48549b9da2be47edf44e~mv2.jpg", "Impression numérique — support 1"],
     ["81cf68_2dc4e062025441bfa81af870f2107d6e~mv2.jpg", "Impression micro-perforé"],
     ["81cf68_3543c0f601204104879d3b1618779d0e~mv2.jpg", "Création, impression, pose enseigne"],
-    ["81cf68_457bb3562473400aa5bbec6e72432f69~mv2.jpg", "Impression numérique"],
-    ["81cf68_ce21f6060c7d4570a0f7306866612bbf~mv2.jpg", "Impression numérique"],
+    ["81cf68_457bb3562473400aa5bbec6e72432f69~mv2.jpg", "Impression numérique — support 2"],
+    ["81cf68_ce21f6060c7d4570a0f7306866612bbf~mv2.jpg", "Impression numérique — support 3"],
     ["81cf68_0df213b973c544f8932712f82e436c17~mv2.jpg", "Bandes T6 aux couleurs de la société"],
   ],
 };
@@ -899,6 +899,7 @@ const CONTACT_EMAIL = 'contact@abs-cover.com';
 const contactForm = document.getElementById('contactForm');
 const formConfirm = document.getElementById('formConfirm');
 const formConfirmReset = document.getElementById('formConfirmReset');
+const contactSubmit = document.getElementById('contactSubmit');
 
 function setFieldError(fieldId, hasError){
   const field = document.getElementById(fieldId);
@@ -931,14 +932,23 @@ contactForm.addEventListener('submit', function(e){
     return;
   }
 
+  // État de chargement : évite le double envoi et donne un retour immédiat,
+  // le temps que le système ouvre l'application mail.
+  contactSubmit.disabled = true;
+  contactSubmit.textContent = 'Envoi...';
+
   const subjectLine = encodeURIComponent(`Demande de devis — ${sujet} — ${nom}`);
   const bodyLine = encodeURIComponent(
     `Nom : ${nom}\nEmail : ${email}\nSujet : ${sujet}\n\nMessage :\n${message}`
   );
   window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subjectLine}&body=${bodyLine}`;
 
-  contactForm.style.display = 'none';
-  formConfirm.classList.add('show');
+  setTimeout(() => {
+    contactForm.style.display = 'none';
+    formConfirm.classList.add('show');
+    contactSubmit.disabled = false;
+    contactSubmit.textContent = 'Envoyer';
+  }, 500);
 });
 
 formConfirmReset.addEventListener('click', () => {

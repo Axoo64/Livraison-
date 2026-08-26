@@ -61,7 +61,8 @@
   nav a.active{color:var(--white);}
   nav a.active::after{transform:scaleX(1);}
   @media(min-width:860px){nav{display:flex;}}
-  .call-btn{font-family:'JetBrains Mono',monospace; font-size:13px; text-decoration:none; color:var(--white); background:var(--accent-solid); padding:10px 18px; font-weight:600;}
+  .call-btn{font-family:'JetBrains Mono',monospace; font-size:13px; text-decoration:none; color:var(--white); background:var(--accent-solid); padding:10px 18px; font-weight:600; display:inline-flex; align-items:center; gap:8px;}
+  .call-icon{display:none; width:16px; height:16px; flex-shrink:0;}
 
   /* ===== ROUTE / PARCOURS — rail vertical fixe ===== */
   .route-rail{
@@ -232,9 +233,20 @@
   .burger{display:flex; align-items:center; justify-content:center; width:38px; height:38px; background:none; border:1px solid var(--line); color:var(--white); cursor:pointer;}
   .burger svg{width:16px; height:16px;}
   @media(min-width:860px){.burger{display:none;}}
+  .header-actions{display:flex; gap:10px; align-items:center; flex-shrink:0;}
+  /* Sous 400px, le numéro en toutes lettres + le logo + le burger ne tiennent
+     plus sur une ligne : le bouton d'appel devient une icône seule (taille
+     fixe, comme le burger) plutôt que de rétrécir le texte jusqu'à l'illisible
+     ou risquer de couper le logo. */
   @media(max-width:400px){
-    .call-btn{padding:9px 12px; font-size:11px;}
-    .logo{font-size:20px;}
+    header{padding:14px 4%;}
+    .header-actions{gap:8px;}
+    .call-btn{padding:0; width:38px; height:38px; justify-content:center;}
+    .call-icon{display:block;}
+    .call-text{display:none;}
+    .logo{font-size:18px;}
+    .logo img{height:26px;}
+    .burger{flex-shrink:0;}
   }
 
   .mobile-panel{
@@ -430,8 +442,11 @@
     <a href="#histoire" data-nav="histoire">04 · Histoire</a>
     <a href="#contact" data-nav="contact">05 · Contact</a>
   </nav>
-  <div style="display:flex; gap:10px; align-items:center;">
-    <a class="call-btn" href="tel:0631812421">06 31 81 24 21</a>
+  <div class="header-actions">
+    <a class="call-btn" href="tel:0631812421" aria-label="Appeler ABS-Cover au 06 31 81 24 21">
+      <svg class="call-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      <span class="call-text">06 31 81 24 21</span>
+    </a>
     <button class="burger" id="burgerBtn" aria-label="Ouvrir le menu" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>

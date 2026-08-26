@@ -1,0 +1,23 @@
+{
+  "name": "ABS-Cover",
+  "short_name": "ABS-Cover",
+  "description": "Vitres teintées, protection carrosserie PPF, covering et impression numérique — Benesse-Maremne, Landes.",
+  "start_url": "index.html",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#0a0a0b",
+  "theme_color": "#0a0a0b",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "https://static.wixstatic.com/media/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png/v1/fill/w_192,h_192,q_90,enc_auto/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://static.wixstatic.com/media/81cf68_ae1e26dc3cd947c29bb7d9cc4702fef4~mv2.png/v1/fill/w_512,h_512,q_90,enc_auto/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -27,6 +27,46 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- PWA — installable sur l'écran d'accueil (utile pour les clients réguliers) -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0a0b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ABS-Cover">
+
+<!-- Données structurées — fiche entreprise exploitable par Google -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "AutomotiveBusiness",
+  "name": "ABS-Cover",
+  "image": "https://static.wixstatic.com/media/81cf68_bcb078de360f4faebc8554a7d84950ea~mv2.jpg",
+  "url": "https://www.abs-cover.com/",
+  "telephone": "+33631812421",
+  "description": "Vitres teintées auto & bâtiment, protection carrosserie PPF certifiée Hexis BodyFence, covering et impression numérique à Benesse-Maremne.",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "1401 Bis route de Bayonne",
+    "addressLocality": "Benesse-Maremne",
+    "postalCode": "40230",
+    "addressCountry": "FR"
+  },
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      "opens": "08:00",
+      "closes": "14:00"
+    }
+  ],
+  "sameAs": [
+    "https://www.facebook.com/Ab.solution6440",
+    "https://www.instagram.com/ab.solution6440/"
+  ]
+}
+</script>
+
 <style>
   :root{
     --black:#0a0a0b; --carbon:#161618; --panel:#1e1e21;
@@ -130,6 +170,15 @@
   .kicker{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--accent-text); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px; display:flex; align-items:center;}
   .step-tag{font-size:44px; font-family:'Bebas Neue',sans-serif; color:transparent; -webkit-text-stroke:1px var(--line); margin-right:16px; letter-spacing:0;}
   .head-row h2{font-family:'Bebas Neue',sans-serif; font-size:clamp(38px,6vw,80px); letter-spacing:0.01em; line-height:0.95;}
+  /* Révélation mot par mot des titres de section — se déclenche en cascade
+     avec le fondu du head-row (voir .reveal / .in-view), pas d'observer
+     supplémentaire nécessaire. */
+  .head-row h2 .word{display:inline-block; overflow:hidden; vertical-align:top;}
+  .head-row h2 .word span{display:inline-block; transform:translateY(110%); transition:transform .7s cubic-bezier(.16,.8,.3,1);}
+  .head-row.in-view h2 .word span{transform:translateY(0);}
+  @media (prefers-reduced-motion: reduce){
+    .head-row h2 .word span{transform:none; transition:none;}
+  }
   .head-row .sub{color:var(--grey); max-width:340px; font-size:14px; line-height:1.6;}
 
   /* SERVICES */
@@ -151,7 +200,7 @@
   .gtab:last-child{border-right:none;}
   .gtab.active{background:var(--accent-solid); color:var(--white);}
   .gtab:hover:not(.active){color:var(--white); background:rgba(245,244,242,0.05);}
-  .g-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:2px;}
+  .g-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:2px; transition:opacity .2s ease;}
   @media(min-width:700px){.g-grid{grid-template-columns:repeat(4,1fr);}}
   .g-item{position:relative; aspect-ratio:1; overflow:hidden; background:var(--black); isolation:isolate; cursor:pointer;}
   .g-item img{width:100%; height:100%; object-fit:cover; filter:grayscale(1) contrast(1.15); transition:filter .5s ease, transform .5s ease;}
@@ -810,10 +859,18 @@ document.addEventListener('keydown', e => {
 renderGallery('covering');
 document.getElementById('gtabs').addEventListener('click', e => {
   const btn = e.target.closest('.gtab');
-  if(!btn) return;
+  if(!btn || btn.classList.contains('active')) return;
   document.querySelectorAll('.gtab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
-  renderGallery(btn.dataset.cat);
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    renderGallery(btn.dataset.cat);
+    return;
+  }
+  galleryGrid.style.opacity = '0';
+  setTimeout(() => {
+    renderGallery(btn.dataset.cat);
+    galleryGrid.style.opacity = '1';
+  }, 180);
 });
 
 // ===== Navigation mobile (hamburger + panneau) =====
@@ -837,9 +894,36 @@ mobilePanel.querySelectorAll('a').forEach(a => a.addEventListener('click', close
 document.addEventListener('keydown', e => { if(e.key === 'Escape') closePanel(); });
 
 // ===== Clic sur le rail de route (desktop) et la barre d'onglets (mobile) =====
+// Scroll fluide avec notre propre courbe d'easing : le scroll natif du
+// navigateur (scrollIntoView) a une durée et une accélération qui varient
+// d'un moteur à l'autre (Chrome, Safari, Firefox ne rendent pas la même
+// sensation) — ici la durée et la courbe sont fixes, cohérentes partout.
+function easeOutExpo(t){ return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
+function smoothScrollTo(targetY, duration){
+  const startY = window.scrollY;
+  const diff = targetY - startY;
+  if(Math.abs(diff) < 1) return;
+  const startTime = performance.now();
+  function step(now){
+    const t = Math.min((now - startTime) / duration, 1);
+    // behavior:'instant' court-circuite le scroll-behavior:smooth du CSS —
+    // sinon le navigateur ré-adoucit chaque appel de cette boucle, ce qui
+    // produit un mouvement mou et imprécis au lieu de suivre notre courbe.
+    window.scrollTo({top: startY + diff * easeOutExpo(t), left: 0, behavior: 'instant'});
+    if(t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
 function scrollToSection(id){
   const el = document.getElementById(id);
-  if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+  if(!el) return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    el.scrollIntoView({block:'start'});
+    return;
+  }
+  const headerOffset = 64; // doit rester aligné avec scroll-margin-top des sections
+  const targetY = el.getBoundingClientRect().top + window.scrollY - headerOffset;
+  smoothScrollTo(targetY, 900);
 }
 document.querySelectorAll('.route-stop').forEach(btn => {
   btn.addEventListener('click', () => scrollToSection(btn.dataset.target));
@@ -866,6 +950,15 @@ document.querySelectorAll('.serv-card[data-goto-section]').forEach(card => {
   card.addEventListener('click', () => scrollToSection(card.dataset.gotoSection));
 });
 
+// ===== Titres de section découpés mot par mot pour la révélation en cascade =====
+function splitHeadingWords(h2){
+  const words = h2.textContent.trim().split(/\s+/);
+  h2.innerHTML = words
+    .map((w, i) => `<span class="word"><span style="transition-delay:${(i * 0.05).toFixed(2)}s">${w}</span></span>`)
+    .join(' ');
+}
+document.querySelectorAll('.head-row h2').forEach(splitHeadingWords);
+
 // ===== Reveal au scroll =====
 document.querySelectorAll('.head-row, .serv-card, .g-item, .stat, .histoire-photo, .contact-block, form, .wed-card, .extra-item')
   .forEach(el => el.classList.add('reveal'));
@@ -881,6 +974,20 @@ const navLinks = document.querySelectorAll('nav a[data-nav]');
 const railStops = document.querySelectorAll('.route-stop');
 const tabbarBtns = document.querySelectorAll('.tabbar button[data-target]');
 const mobileNavLinks = document.querySelectorAll('a[data-nav-mobile]');
+
+// Les liens du header et du panneau mobile passent par le même scroll
+// fluide personnalisé que le rail de route et la tabbar, au lieu de laisser
+// le navigateur gérer le saut d'ancre à sa façon (durée/courbe différentes
+// d'un moteur à l'autre) — un seul mécanisme de scroll, cohérent partout.
+navLinks.forEach(a => a.addEventListener('click', e => {
+  e.preventDefault();
+  scrollToSection(a.dataset.nav);
+}));
+mobileNavLinks.forEach(a => a.addEventListener('click', e => {
+  e.preventDefault();
+  scrollToSection(a.dataset.navMobile);
+}));
+
 const sectionIds = ['services', 'realisations', 'mariage', 'histoire', 'contact'];
 const sections = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
 
@@ -1111,6 +1218,28 @@ if(!reduceMotion && window.matchMedia('(pointer:fine)').matches){
       card.style.transform = `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02,1.02,1.02)`;
     });
     card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+  });
+}
+
+// ===== BOUTONS MAGNÉTIQUES — les CTA suivent légèrement le curseur =====
+if(!reduceMotion && window.matchMedia('(pointer:fine)').matches){
+  document.querySelectorAll('.btn').forEach(btn => {
+    const strength = 0.35, max = 10;
+    // Pendant le suivi : transform sans transition, collé au curseur à chaque
+    // frame (sinon la transition CSS "all" du bouton se relance à chaque
+    // mousemove et rentre en concurrence avec elle-même — source de saccades
+    // mesurées en profilage). Le rebond élastique n'a lieu qu'au relâchement.
+    btn.addEventListener('mousemove', e => {
+      const rect = btn.getBoundingClientRect();
+      const dx = Math.max(-max, Math.min(max, (e.clientX - (rect.left + rect.width / 2)) * strength));
+      const dy = Math.max(-max, Math.min(max, (e.clientY - (rect.top + rect.height / 2)) * strength));
+      btn.style.transition = 'transform 0s';
+      btn.style.transform = `translate(${dx}px, ${dy}px)`;
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.transition = 'transform .3s cubic-bezier(.16,.8,.3,1)';
+      btn.style.transform = '';
+    });
   });
 }
 

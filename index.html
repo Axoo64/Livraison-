@@ -862,10 +862,15 @@ function closeLightbox(){
   document.body.style.overflow = '';
 }
 function showLightboxImage(){
-  const [file, label] = galleries[lbCat][lbIndex];
+  const catItems = galleries[lbCat];
+  if(!catItems || !catItems.length) return;
+  // Sécurise l'index même s'il a été corrompu (au lieu de planter) : on le
+  // ramène toujours dans les bornes valides du tableau courant.
+  lbIndex = ((lbIndex % catItems.length) + catItems.length) % catItems.length;
+  const [file, label] = catItems[lbIndex];
   lightboxImg.src = `https://static.wixstatic.com/media/${file}/v1/fit/w_1400,q_82,enc_avif,quality_auto/${file}`;
   lightboxImg.alt = label;
-  lightboxCaption.textContent = `${label} — ${lbIndex + 1}/${galleries[lbCat].length}`;
+  lightboxCaption.textContent = `${label} — ${lbIndex + 1}/${catItems.length}`;
 }
 function lbNext(){ lbIndex = (lbIndex + 1) % galleries[lbCat].length; showLightboxImage(); }
 function lbPrev(){ lbIndex = (lbIndex - 1 + galleries[lbCat].length) % galleries[lbCat].length; showLightboxImage(); }

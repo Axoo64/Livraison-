@@ -121,7 +121,8 @@
   .route-stop:hover .dot{border-color:var(--white);}
   .route-stop.active .dot{background:var(--accent); border-color:var(--accent); box-shadow:0 0 0 5px rgba(232,53,43,0.18);}
   .route-label{
-    position:absolute; left:26px; top:50%; transform:translateY(-50%); white-space:nowrap;
+    position:absolute; left:26px; top:50%; transform:translateY(-50%);
+    max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
     font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--grey); letter-spacing:0.05em;
     opacity:0; transition:opacity .25s ease;
   }
@@ -166,7 +167,11 @@
   @keyframes scroll{from{transform:translateX(0);} to{transform:translateX(-50%);}}
 
   section{padding:110px 5% 110px 5%; scroll-margin-top:64px;}
-  @media(min-width:1080px){section{padding-left:9%;}}
+  /* max() garantit une marge fixe minimale avec le rail de route, quelle
+     que soit la longueur du libellé actif (ex: "Réalisations" est plus
+     long que "Contact") — un pourcentage seul devenait trop juste sur les
+     largeurs proches de 1080px et pouvait chevaucher le contenu. */
+  @media(min-width:1080px){section{padding-left:max(9%, 190px);}}
   .head-row{display:flex; justify-content:space-between; align-items:flex-end; gap:20px; flex-wrap:wrap; margin-bottom:56px; border-bottom:1px solid var(--line); padding-bottom:26px;}
   .kicker{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--accent-text); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px; display:flex; align-items:center;}
   .step-tag{font-size:44px; font-family:'Bebas Neue',sans-serif; color:transparent; -webkit-text-stroke:1px var(--line); margin-right:16px; letter-spacing:0;}
@@ -478,7 +483,7 @@
   <div class="route-track"><div class="route-fill" id="routeFill"></div></div>
   <button class="route-stop" data-target="services"><span class="dot"></span><span class="route-label">01 · Services</span></button>
   <button class="route-stop" data-target="realisations"><span class="dot"></span><span class="route-label">02 · Réalisations</span></button>
-  <button class="route-stop" data-target="mariage"><span class="dot"></span><span class="route-label">03 · Mariage & Événement</span></button>
+  <button class="route-stop" data-target="mariage"><span class="dot"></span><span class="route-label">03 · Mariage</span></button>
   <button class="route-stop" data-target="histoire"><span class="dot"></span><span class="route-label">04 · Histoire</span></button>
   <button class="route-stop" data-target="contact"><span class="dot"></span><span class="route-label">05 · Contact</span></button>
 </div>

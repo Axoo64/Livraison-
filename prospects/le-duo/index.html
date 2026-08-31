@@ -19,6 +19,7 @@
     --black:#0a0a0a;
     --white:#ffffff;
     --accent-pink:#b81a68;
+    --ember:#8c3a26;  /* braise, cohérent avec le glow déjà utilisé ailleurs */
     --line: rgba(10,10,10,0.12);
   }
   *{box-sizing:border-box;}
@@ -185,7 +186,7 @@
   .narg-tier{
     text-align:center;
     padding:26px 18px;
-    border:1px solid var(--tier-color, var(--line));
+    border:1px solid var(--tier-color, rgba(10,10,10,0.28));
     background:rgba(255,255,255,0.5);
     transition:border-color .2s ease;
   }
@@ -326,12 +327,13 @@
   /* Le point n'apparaît que pour les catégories où une vraie photo de plat
      le justifie. Boissons chaudes et Softs n'en ont pas : plutôt qu'un gris
      par défaut qui donnerait l'impression d'un oubli, pas de point du tout. */
-  .carte-cat.sucres h3::before, .carte-cat.glace h3::before, .carte-cat.chaudes h3::before{
+  .carte-cat.sucres h3::before, .carte-cat.glace h3::before, .carte-cat.chaudes h3::before, .carte-cat.softs h3::before{
     content:''; width:8px; height:8px; border-radius:50%; flex-shrink:0;
   }
   .carte-cat.sucres h3::before{ background:#a1251f; }   /* rouge fraise, crepe.jpg */
   .carte-cat.glace h3::before{ background:#e8bd4c; }    /* jaune mangue, mochi.jpg */
   .carte-cat.chaudes h3::before{ background:#8a6a5c; }  /* moka/caramel, cafe.jpg (couche du cappuccino) */
+  .carte-cat.softs h3::before{ background:#c49044; }    /* orange pressée, orange.jpg */
 </style>
 </head>
 <body>
@@ -402,7 +404,7 @@
         <div class="menu-line"><span class="name">Thé infusion « Kusmi Tea »</span><span class="price">3 €</span></div>
       </div>
 
-      <div class="carte-cat">
+      <div class="carte-cat softs">
         <h3>Nos Softs</h3>
         <div class="menu-line"><span class="name">Coca cola, zéro, cherry</span><span class="price">3 €</span></div>
         <div class="menu-line"><span class="name">Ice tea</span><span class="price">3 €</span></div>

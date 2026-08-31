@@ -473,6 +473,10 @@
     transition:border-color .2s ease, color .2s ease;}
   .fc-copy:hover{border-color:var(--accent-text); color:var(--accent-text);}
   .fc-copy:focus-visible{outline:2px solid var(--accent-text); outline-offset:2px;}
+
+  /* Envoi non abouti : on distingue visuellement du cas nominal, sans dramatiser */
+  .form-confirm.is-echec .fc-icon{background:var(--accent-solid); color:var(--white);}
+  .form-confirm.is-echec .fc-contact a{color:var(--accent-text); font-weight:600;}
 </style>
 </head>
 <body class="loading">
@@ -1284,18 +1288,38 @@ function envoyerViaBackend(data){
 }
 
 // Repli : ouvre le client mail du visiteur avec la demande pré-rédigée.
+//
+// Problème connu de cette approche : si le visiteur n'a pas de client mail
+// configuré (cas fréquent sur mobile), il ne se passe strictement rien et
+// personne ne le sait — ni lui, ni nous. On détecte donc si le navigateur a
+// bien passé la main à une application : quand un client mail s'ouvre, la page
+// perd le focus ou passe en arrière-plan. Si rien ne bouge, c'est que l'envoi
+// n'a pas abouti, et on le dit clairement au lieu d'afficher une confirmation
+// rassurante et fausse.
 function envoyerViaMailto(data){
   const subjectLine = encodeURIComponent(`Demande de devis — ${data.sujet} — ${data.nom}`);
   const bodyLine = encodeURIComponent(
     `Nom : ${data.nom}\nEmail : ${data.email}\nSujet : ${data.sujet}\n\nMessage :\n${data.message}`
   );
+
+  let mainPassee = false;
+  const noterPassage = () => { mainPassee = true; };
+  window.addEventListener('blur', noterPassage);
+  document.addEventListener('visibilitychange', noterPassage);
+
   window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subjectLine}&body=${bodyLine}`;
 
+  // 1,2 s : assez pour laisser le système ouvrir l'application mail, assez
+  // court pour que le visiteur ne reste pas devant un bouton figé.
   setTimeout(() => {
-    afficherConfirmation('mailto');
+    window.removeEventListener('blur', noterPassage);
+    document.removeEventListener('visibilitychange', noterPassage);
+
+    // document.hidden couvre le cas où l'app s'ouvre sans déclencher blur.
+    afficherConfirmation(mainPassee || document.hidden ? 'mailto' : 'echec');
     contactSubmit.disabled = false;
     contactSubmit.textContent = 'Envoyer';
-  }, 500);
+  }, 1200);
 }
 
 // Le message de confirmation dit la vérité sur ce qui vient de se passer :
@@ -1305,11 +1329,24 @@ function afficherConfirmation(mode){
   const texte = document.getElementById('fcTexte');
   const secours = document.getElementById('fcSecours');
 
+  const icone = formConfirm.querySelector('.fc-icon');
+
   if(mode === 'envoye'){
+    icone.textContent = '✓';
+    formConfirm.classList.remove('is-echec');
     titre.textContent = 'Message envoyé';
     texte.textContent = 'Votre demande nous est bien parvenue. Nous vous répondons sous 24 à 48 h.';
     secours.hidden = true;
+  } else if(mode === 'echec'){
+    // Aucun client mail n'a pris la main : le message n'est PAS parti.
+    icone.textContent = '!';
+    formConfirm.classList.add('is-echec');
+    titre.textContent = "Votre message n'a pas pu être envoyé";
+    texte.textContent = "Aucune application mail ne s'est ouverte sur votre appareil. Votre demande n'a donc pas été transmise — contactez-nous directement, on vous répond tout de suite :";
+    secours.hidden = false;
   } else {
+    icone.textContent = '✓';
+    formConfirm.classList.remove('is-echec');
     titre.textContent = 'Message prêt à partir';
     texte.textContent = 'Votre client email va s\'ouvrir avec votre demande déjà rédigée — il ne vous reste qu\'à cliquer sur envoyer.';
     secours.hidden = false;

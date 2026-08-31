@@ -334,6 +334,49 @@
   .carte-cat.glace h3::before{ background:#e8bd4c; }    /* jaune mangue, mochi.jpg */
   .carte-cat.chaudes h3::before{ background:#8a6a5c; }  /* moka/caramel, cafe.jpg (couche du cappuccino) */
   .carte-cat.softs h3::before{ background:#c49044; }    /* orange pressée, orange.jpg */
+
+  /* ===== Formulaire de contact — leur vrai site en a un
+     (Prénom / Nom / Email / Message), notre maquette n'avait qu'un
+     bloc d'infos statique. ===== */
+  .contact-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:60px;
+    max-width:900px; margin:0 auto; text-align:left;
+  }
+  /* Sans ça, un champ de formulaire élargit toute la grille sous sa
+     largeur minimale de contenu par défaut (même bug déjà rencontré sur
+     les démos Garage/Palombière). */
+  .contact-grid > *{ min-width:0; }
+  .contact-form input, .contact-form textarea{ min-width:0; max-width:100%; box-sizing:border-box; }
+  .contact-infos{ text-align:center; }
+  .contact-form .field{ margin-bottom:16px; }
+  .contact-form label{
+    display:block; font-size:0.75rem; letter-spacing:0.08em; text-transform:uppercase;
+    color:#b8b8b8; margin-bottom:6px;
+  }
+  .contact-form input, .contact-form textarea{
+    width:100%; padding:12px 14px; font-family:'Work Sans', sans-serif; font-size:0.95rem;
+    background:rgba(255,255,255,0.06); color:var(--white);
+    border:1px solid #4a4a4a; border-radius:0;
+  }
+  .contact-form input:focus, .contact-form textarea:focus{ outline:none; border-color:var(--white); }
+  .contact-form textarea{ min-height:110px; resize:vertical; }
+  .contact-form .field.error input, .contact-form .field.error textarea{ border-color:#e0846f; }
+  .contact-form .field .msg{ display:none; font-size:0.72rem; color:#e0846f; margin-top:5px; }
+  .contact-form .field.error .msg{ display:block; }
+  .contact-form button{
+    width:100%; padding:13px; background:var(--white); color:var(--black); border:none;
+    font-family:'Jost', sans-serif; font-size:0.82rem; letter-spacing:0.1em; text-transform:uppercase;
+    cursor:pointer; transition:background .2s ease;
+  }
+  .contact-form button:hover{ background:#d8d8d8; }
+  .contact-form button:disabled{ opacity:0.6; cursor:default; }
+  .contact-sent{ display:none; text-align:left; }
+  .contact-sent.show{ display:block; }
+  .contact-sent h3{ color:var(--white); font-size:1.1rem; margin-bottom:10px; }
+  .contact-sent p{ font-size:0.9rem; color:#cfcfcf; }
+  @media (max-width:780px){
+    .contact-grid{ grid-template-columns:1fr; gap:36px; }
+  }
 </style>
 </head>
 <body>
@@ -453,14 +496,47 @@
 
   <section class="contact-band" id="contact">
     <h2>Contactez-nous</h2>
-    <p>15/17 Rue des Pontots</p>
-    <p>64 100 Bayonne.</p>
-    <div class="socials">
-      <a href="#">Instagram</a>
-      <a href="#">Snapchat</a>
-      <a href="#">TikTok</a>
+    <div class="contact-grid">
+      <div class="contact-infos">
+        <p>15/17 Rue des Pontots</p>
+        <p>64 100 Bayonne.</p>
+        <div class="socials">
+          <a href="#">Instagram</a>
+          <a href="#">Snapchat</a>
+          <a href="#">TikTok</a>
+        </div>
+        <div class="hours-line">Horaires : 15h – 01h30</div>
+      </div>
+      <div>
+        <form class="contact-form" id="contactForm" novalidate>
+          <div class="field" id="f-prenom">
+            <label for="prenom">Prénom</label>
+            <input type="text" id="prenom" autocomplete="given-name">
+            <span class="msg">Merci d'indiquer votre prénom.</span>
+          </div>
+          <div class="field" id="f-nom">
+            <label for="nomFamille">Nom de famille</label>
+            <input type="text" id="nomFamille" autocomplete="family-name">
+            <span class="msg">Merci d'indiquer votre nom.</span>
+          </div>
+          <div class="field" id="f-email">
+            <label for="emailContact">E-mail *</label>
+            <input type="email" id="emailContact" autocomplete="email">
+            <span class="msg">Merci d'indiquer un email valide.</span>
+          </div>
+          <div class="field" id="f-message">
+            <label for="messageContact">Contacter</label>
+            <textarea id="messageContact"></textarea>
+            <span class="msg">Merci d'indiquer votre message.</span>
+          </div>
+          <button type="submit" id="contactSubmit">Envoyer</button>
+        </form>
+        <div class="contact-sent" id="contactSent">
+          <h3 id="sentTitre">Message prêt à partir</h3>
+          <p id="sentTexte"></p>
+        </div>
+      </div>
     </div>
-    <div class="hours-line">Horaires : 15h – 01h30</div>
   </section>
 
   <footer>
@@ -469,5 +545,70 @@
   </footer>
 
   <div class="maquette-flag"><b>Maquette de démonstration</b> — non affiliée au Duo, réalisée à titre d'exemple</div>
+
+<script>
+const CONTACT_EMAIL = 'contact@leduo64.com'; // à confirmer avec le vrai contact du Duo
+
+const contactForm = document.getElementById('contactForm');
+const contactSent = document.getElementById('contactSent');
+const contactSubmit = document.getElementById('contactSubmit');
+
+function setErreur(id, actif){
+  const champ = document.getElementById(id);
+  if(champ) champ.classList.toggle('error', actif);
+}
+function emailValide(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+contactForm.addEventListener('submit', function(e){
+  e.preventDefault();
+  const prenom = document.getElementById('prenom').value.trim();
+  const nom = document.getElementById('nomFamille').value.trim();
+  const email = document.getElementById('emailContact').value.trim();
+  const message = document.getElementById('messageContact').value.trim();
+
+  const okPrenom = prenom.length > 0;
+  const okEmail = emailValide(email);
+  const okMessage = message.length > 0;
+  setErreur('f-prenom', !okPrenom);
+  setErreur('f-email', !okEmail);
+  setErreur('f-message', !okMessage);
+  if(!okPrenom || !okEmail || !okMessage){
+    const premier = contactForm.querySelector('.error input, .error textarea');
+    if(premier) premier.focus();
+    return;
+  }
+
+  contactSubmit.disabled = true;
+  contactSubmit.textContent = 'Envoi...';
+
+  // Pas de backend ici (maquette) : on passe par mailto, et on détecte si
+  // un vrai client mail a pris la main avant d'afficher une confirmation —
+  // même logique que sur les sites livrés, pour ne jamais faire croire
+  // qu'un message est parti s'il ne l'est pas.
+  let passee = false;
+  const noter = () => { passee = true; };
+  window.addEventListener('blur', noter);
+  document.addEventListener('visibilitychange', noter);
+
+  const sujet = encodeURIComponent('Contact depuis le site — ' + prenom + ' ' + nom);
+  const corps = encodeURIComponent('Prénom : ' + prenom + '\nNom : ' + nom + '\nEmail : ' + email + '\n\n' + message);
+  window.location.href = 'mailto:' + CONTACT_EMAIL + '?subject=' + sujet + '&body=' + corps;
+
+  setTimeout(() => {
+    window.removeEventListener('blur', noter);
+    document.removeEventListener('visibilitychange', noter);
+    const abouti = passee || document.hidden;
+    document.getElementById('sentTitre').textContent =
+      abouti ? 'Message prêt à partir' : "Le message n'a pas pu être envoyé";
+    document.getElementById('sentTexte').textContent = abouti
+      ? "Votre client email va s'ouvrir avec votre message déjà rédigé."
+      : "Aucune application mail ne s'est ouverte. Appelez-nous directement au 07 88 90 92 96.";
+    contactForm.style.display = 'none';
+    contactSent.classList.add('show');
+    contactSubmit.disabled = false;
+    contactSubmit.textContent = 'Envoyer';
+  }, 1200);
+});
+</script>
 </body>
 </html>

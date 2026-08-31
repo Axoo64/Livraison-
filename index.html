@@ -949,7 +949,15 @@ function buildGalleryGrid(cat){
     moreBtn.className = 'g-more';
     moreBtn.textContent = `Voir ${items.length - GALLERY_INITIAL_COUNT} photos de plus →`;
     moreBtn.addEventListener('click', () => {
-      grid.querySelectorAll('.g-extra-hidden').forEach(el => el.classList.remove('g-extra-hidden'));
+      // Ces vignettes étaient display:none, donc jamais "vues" par l'observer
+      // de révélation au scroll : sans ça, tout ce qui atterrit hors de l'écran
+      // au moment du clic restait invisible (opacity:0) tant qu'on ne
+      // scrollait pas exactement jusqu'à elles — on dirait des photos
+      // manquantes. On les affiche directement au clic.
+      grid.querySelectorAll('.g-extra-hidden').forEach(el => {
+        el.classList.remove('g-extra-hidden');
+        el.classList.add('in-view');
+      });
       moreBtn.remove();
     });
     grid.appendChild(moreBtn);

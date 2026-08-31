@@ -185,9 +185,17 @@
   .narg-tier{
     text-align:center;
     padding:26px 18px;
-    border:1px solid var(--line);
+    border:1px solid var(--tier-color, var(--line));
     background:rgba(255,255,255,0.5);
+    transition:border-color .2s ease;
   }
+  /* Une couleur très légère par formule, choisie pour ce qu'elle représente
+     plutôt qu'un classement par prix (Prestige à 15€ coûte moins cher que
+     Classique à 20€ : un dégradé du plus pâle au plus soutenu mentirait
+     sur le tarif). Naturel reste neutre : c'est la formule "sans rien
+     ajouté", l'absence de couleur lui va bien. */
+  .narg-tier.classique{ --tier-color:rgba(184,26,104,0.4); }   /* accent rose du menu, formule + boisson */
+  .narg-tier.prestige{ --tier-color:var(--chrome-dark); }     /* graphite plein, teinte du matériel Brohood/Kaloud */
   .narg-tier .tier-name{ font-family:'Jost', sans-serif; letter-spacing:0.08em; font-size:1.05rem; text-transform:uppercase;}
   .narg-tier .tier-desc{ font-size:0.76rem; color:var(--ink-dim); display:block; margin-top:6px;}
   .narg-tier .price{ display:block; margin-top:14px; font-size:1.3rem; color:var(--black); }
@@ -312,12 +320,14 @@
   /* Points de couleur pris directement dans les photos des plats (fraise,
      fleurs, mangue) — pas des couleurs de tendance, du vrai contenu. */
   .carte-cat h3{ display:flex; align-items:center; gap:9px; }
-  .carte-cat h3::before{
+  /* Le point n'apparaît que pour les catégories où une vraie photo de plat
+     le justifie. Boissons chaudes et Softs n'en ont pas : plutôt qu'un gris
+     par défaut qui donnerait l'impression d'un oubli, pas de point du tout. */
+  .carte-cat.sucres h3::before, .carte-cat.glace h3::before{
     content:''; width:8px; height:8px; border-radius:50%; flex-shrink:0;
-    background:var(--dot, var(--chrome));
   }
-  .carte-cat.sucres h3{ --dot:#a1251f; }     /* rouge fraise, crepe.jpg */
-  .carte-cat.glace h3{ --dot:#e8bd4c; }      /* jaune mangue, mochi.jpg */
+  .carte-cat.sucres h3::before{ background:#a1251f; }  /* rouge fraise, crepe.jpg */
+  .carte-cat.glace h3::before{ background:#e8bd4c; }   /* jaune mangue, mochi.jpg */
 </style>
 </head>
 <body>
@@ -365,8 +375,8 @@
     <div class="cat-band">Nos Narguilés</div>
     <div class="narg-tiers">
       <div class="narg-tier"><span class="tier-name">Naturel</span><span class="tier-desc">Formule de base</span><span class="price">12 €</span></div>
-      <div class="narg-tier"><span class="tier-name">Classique</span><span class="tier-desc">+ une boisson au choix</span><span class="price">20 €</span></div>
-      <div class="narg-tier"><span class="tier-name">Prestige</span><span class="tier-desc">Brohood ou Kaloud</span><span class="price">15 €</span></div>
+      <div class="narg-tier classique"><span class="tier-name">Classique</span><span class="tier-desc">+ une boisson au choix</span><span class="price">20 €</span></div>
+      <div class="narg-tier prestige"><span class="tier-name">Prestige</span><span class="tier-desc">Brohood ou Kaloud</span><span class="price">15 €</span></div>
       <div class="narg-tier premium"><span class="tier-name">Premium — Quasar</span><span class="tier-desc">Hooky Steel Quasar</span><span class="price">25 €</span></div>
     </div>
 

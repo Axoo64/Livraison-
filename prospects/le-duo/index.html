@@ -194,8 +194,11 @@
      Classique à 20€ : un dégradé du plus pâle au plus soutenu mentirait
      sur le tarif). Naturel reste neutre : c'est la formule "sans rien
      ajouté", l'absence de couleur lui va bien. */
-  .narg-tier.classique{ --tier-color:rgba(184,26,104,0.4); }   /* accent rose du menu, formule + boisson */
-  .narg-tier.prestige{ --tier-color:var(--chrome-dark); }     /* graphite plein, teinte du matériel Brohood/Kaloud */
+  /* La formule qui inclut Brohood/Kaloud (du matériel de gestion de
+     chauffe) prend le graphite ; celle qui inclut une boisson offerte
+     garde l'accent braise + la pulsation, en tant que formule la plus
+     complète (25€, prix le plus haut, vraie offre incluse). */
+  .narg-tier.naturel{ --tier-color:var(--chrome-dark); }
   .narg-tier .tier-name{ font-family:'Jost', sans-serif; letter-spacing:0.08em; font-size:1.05rem; text-transform:uppercase;}
   .narg-tier .tier-desc{ font-size:0.76rem; color:var(--ink-dim); display:block; margin-top:6px;}
   .narg-tier .price{ display:block; margin-top:14px; font-size:1.3rem; color:var(--black); }
@@ -374,10 +377,10 @@
   <section id="carte">
     <div class="cat-band">Nos Narguilés</div>
     <div class="narg-tiers">
-      <div class="narg-tier"><span class="tier-name">Naturel</span><span class="tier-desc">Formule de base</span><span class="price">12 €</span></div>
-      <div class="narg-tier classique"><span class="tier-name">Classique</span><span class="tier-desc">+ une boisson au choix</span><span class="price">20 €</span></div>
-      <div class="narg-tier prestige"><span class="tier-name">Prestige</span><span class="tier-desc">Brohood ou Kaloud</span><span class="price">15 €</span></div>
-      <div class="narg-tier premium"><span class="tier-name">Premium — Quasar</span><span class="tier-desc">Hooky Steel Quasar</span><span class="price">25 €</span></div>
+      <div class="narg-tier"><span class="tier-name">Classique</span><span class="price">12 €</span></div>
+      <div class="narg-tier naturel"><span class="tier-name">Naturel</span><span class="tier-desc">Brohood ou Kaloud</span><span class="price">15 €</span></div>
+      <div class="narg-tier"><span class="tier-name">Premium Quasar</span><span class="price">20 €</span></div>
+      <div class="narg-tier premium"><span class="tier-name">Prestige Quasar</span><span class="tier-desc">+ une boisson au choix offerte</span><span class="price">25 €</span></div>
     </div>
 
     <div class="section-head">

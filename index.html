@@ -464,6 +464,15 @@
   .cookie-actions button.accept{background:var(--accent-solid); border-color:var(--accent-solid); font-weight:700;}
   .cookie-actions button:hover{opacity:0.85;}
   @media(max-width:860px){.cookie-banner{bottom:64px;}}
+
+  /* Contacts de secours affichés quand l'envoi passe par le client mail */
+  .fc-contact{display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:10px;}
+  .fc-sep{color:var(--grey);}
+  .fc-copy{background:transparent; border:1px solid var(--line); color:var(--grey); font-family:'JetBrains Mono',monospace;
+    font-size:11px; letter-spacing:0.04em; text-transform:uppercase; padding:7px 12px; cursor:pointer;
+    transition:border-color .2s ease, color .2s ease;}
+  .fc-copy:hover{border-color:var(--accent-text); color:var(--accent-text);}
+  .fc-copy:focus-visible{outline:2px solid var(--accent-text); outline-offset:2px;}
 </style>
 </head>
 <body class="loading">
@@ -745,9 +754,17 @@
     </form>
     <div class="form-confirm" id="formConfirm">
       <div class="fc-icon">✓</div>
-      <h3>Message prêt à partir</h3>
-      <p>Votre client email va s'ouvrir avec votre demande déjà rédigée — il ne vous reste qu'à cliquer sur envoyer.</p>
-      <p>Si rien ne s'ouvre automatiquement (bloqueur, pas de client mail configuré), appelez-nous directement au <a href="tel:0631812421">06 31 81 24 21</a>.</p>
+      <h3 id="fcTitre">Message prêt à partir</h3>
+      <p id="fcTexte">Votre client email va s'ouvrir avec votre demande déjà rédigée — il ne vous reste qu'à cliquer sur envoyer.</p>
+      <div id="fcSecours">
+        <p>Si rien ne s'ouvre automatiquement (bloqueur, pas de client mail configuré), joignez-nous directement :</p>
+        <p class="fc-contact">
+          <a href="tel:0631812421">06 31 81 24 21</a>
+          <span class="fc-sep">·</span>
+          <a href="mailto:contact@abs-cover.com">contact@abs-cover.com</a>
+          <button type="button" class="fc-copy" id="fcCopyEmail">Copier l'adresse</button>
+        </p>
+      </div>
       <button class="btn" id="formConfirmReset" type="button">Envoyer un autre message</button>
     </div>
   </div>
@@ -1182,9 +1199,19 @@ window.addEventListener('load', refreshScrollable);
 refreshScrollable();
 updateProgress();
 
-// ===== FORMULAIRE — validation + envoi réel (mailto) + confirmation =====
+// ===== FORMULAIRE — validation + envoi + confirmation =====
 // Adresse qui reçoit les demandes. À CONFIRMER / REMPLACER si ce n'est pas la bonne.
 const CONTACT_EMAIL = 'contact@abs-cover.com';
+
+// Point d'envoi du formulaire. Tant qu'il est vide, on retombe sur mailto:
+// (ouverture du client mail du visiteur) — ça marche, mais si le visiteur n'a
+// pas de client mail configuré sur son téléphone, le message ne part jamais.
+//
+// Pour un envoi fiable : créer un compte gratuit chez Formspree
+// (https://formspree.io) ou Web3Forms (https://web3forms.com), puis coller
+// l'URL du formulaire ici. Rien d'autre à changer, le reste du code s'adapte.
+// Exemple : const FORM_ENDPOINT = 'https://formspree.io/f/abcdwxyz';
+const FORM_ENDPOINT = '';
 
 const contactForm = document.getElementById('contactForm');
 const formConfirm = document.getElementById('formConfirm');
@@ -1222,24 +1249,104 @@ contactForm.addEventListener('submit', function(e){
     return;
   }
 
-  // État de chargement : évite le double envoi et donne un retour immédiat,
-  // le temps que le système ouvre l'application mail.
+  // État de chargement : évite le double envoi et donne un retour immédiat.
   contactSubmit.disabled = true;
   contactSubmit.textContent = 'Envoi...';
 
-  const subjectLine = encodeURIComponent(`Demande de devis — ${sujet} — ${nom}`);
+  if(FORM_ENDPOINT){
+    envoyerViaBackend({nom, email, sujet, message});
+  } else {
+    envoyerViaMailto({nom, email, sujet, message});
+  }
+});
+
+// Envoi réel : la demande part directement, le visiteur n'a rien à faire de plus.
+function envoyerViaBackend(data){
+  fetch(FORM_ENDPOINT, {
+    method: 'POST',
+    headers: {'Accept': 'application/json'},
+    body: new FormData(contactForm)
+  })
+  .then(res => {
+    if(!res.ok) throw new Error('Réponse ' + res.status);
+    afficherConfirmation('envoye');
+  })
+  .catch(() => {
+    // L'envoi a échoué (réseau coupé, service indisponible, quota dépassé).
+    // On ne fait pas semblant que c'est parti : on bascule sur le mailto pour
+    // que le visiteur ait quand même un moyen de nous joindre.
+    envoyerViaMailto(data);
+  })
+  .finally(() => {
+    contactSubmit.disabled = false;
+    contactSubmit.textContent = 'Envoyer';
+  });
+}
+
+// Repli : ouvre le client mail du visiteur avec la demande pré-rédigée.
+function envoyerViaMailto(data){
+  const subjectLine = encodeURIComponent(`Demande de devis — ${data.sujet} — ${data.nom}`);
   const bodyLine = encodeURIComponent(
-    `Nom : ${nom}\nEmail : ${email}\nSujet : ${sujet}\n\nMessage :\n${message}`
+    `Nom : ${data.nom}\nEmail : ${data.email}\nSujet : ${data.sujet}\n\nMessage :\n${data.message}`
   );
   window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subjectLine}&body=${bodyLine}`;
 
   setTimeout(() => {
-    contactForm.style.display = 'none';
-    formConfirm.classList.add('show');
+    afficherConfirmation('mailto');
     contactSubmit.disabled = false;
     contactSubmit.textContent = 'Envoyer';
   }, 500);
+}
+
+// Le message de confirmation dit la vérité sur ce qui vient de se passer :
+// "envoyé" seulement quand ça l'est vraiment, "prêt à partir" pour le mailto.
+function afficherConfirmation(mode){
+  const titre = document.getElementById('fcTitre');
+  const texte = document.getElementById('fcTexte');
+  const secours = document.getElementById('fcSecours');
+
+  if(mode === 'envoye'){
+    titre.textContent = 'Message envoyé';
+    texte.textContent = 'Votre demande nous est bien parvenue. Nous vous répondons sous 24 à 48 h.';
+    secours.hidden = true;
+  } else {
+    titre.textContent = 'Message prêt à partir';
+    texte.textContent = 'Votre client email va s\'ouvrir avec votre demande déjà rédigée — il ne vous reste qu\'à cliquer sur envoyer.';
+    secours.hidden = false;
+  }
+
+  contactForm.style.display = 'none';
+  formConfirm.classList.add('show');
+}
+
+// Bouton "copier l'adresse" : sur mobile, si le client mail ne s'ouvre pas,
+// c'est le moyen le plus simple de récupérer l'adresse sans la recopier.
+const fcCopyEmail = document.getElementById('fcCopyEmail');
+fcCopyEmail.addEventListener('click', () => {
+  const done = () => {
+    fcCopyEmail.textContent = 'Adresse copiée ✓';
+    setTimeout(() => { fcCopyEmail.textContent = "Copier l'adresse"; }, 2000);
+  };
+  // navigator.clipboard n'existe pas partout (vieux navigateurs, contexte non
+  // sécurisé) : dans ce cas on sélectionne le texte pour une copie manuelle.
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(CONTACT_EMAIL).then(done).catch(selectionManuelle);
+  } else {
+    selectionManuelle();
+  }
 });
+
+function selectionManuelle(){
+  const lien = document.querySelector('.fc-contact a[href^="mailto:"]');
+  if(!lien) return;
+  const range = document.createRange();
+  range.selectNodeContents(lien);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  fcCopyEmail.textContent = 'Sélectionnée — copiez-la';
+  setTimeout(() => { fcCopyEmail.textContent = "Copier l'adresse"; }, 2500);
+}
 
 formConfirmReset.addEventListener('click', () => {
   contactForm.reset();

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Garage Lartigue — Mécanique & carrosserie | Démonstration</title>
+<meta name="description" content="Exemple de site pour un garage : mécanique, carrosserie, entretien. Démonstration de mise en page, entreprise fictive.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23E86415'/%3E%3Ctext x='16' y='23' font-family='sans-serif' font-size='19' font-weight='700' fill='white' text-anchor='middle'%3EG%3C/text%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Chakra+Petch:wght@600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- =========================================================================
+     FICHE CLIENT — TOUT CE QUI CHANGE D'UN PROSPECT À L'AUTRE EST ICI
+     Rien à modifier ailleurs. Voir demos/README.md.
+     ========================================================================= -->
+<style>
+  :root{
+    /* --- Couleurs : à prendre sur le logo / l'enseigne / le camion --- */
+    --ground:#0B0C0E;        /* fond général */
+    --surface:#15171A;       /* cartes, champs */
+    --ink:#F2F3F4;           /* texte principal */
+    --ink-soft:#9BA1A8;      /* texte secondaire */
+    --line:rgba(242,243,244,.11);
+    --accent:#E86415;        /* couleur d'accent (boutons pleins) */
+    --accent-deep:#C4520E;   /* accent au survol */
+    --accent-ink:#FF7D2E;    /* accent sur fond sombre (texte, liens) */
+    --accent-on:#0B0C0E;     /* texte posé sur l'accent */
+    --danger:#E0483C;
+
+    /* --- Typographie --- */
+    --font-display:'Chakra Petch', system-ui, sans-serif;
+    --font-body:'Archivo', system-ui, sans-serif;
+    --font-util:'Roboto Mono', ui-monospace, monospace;
+    --track-display:-.01em;
+
+    /* --- Mise en page --- */
+    --radius:2px;
+    --pad-x:6vw;
+    --pad-y:110px;
+    --max-w:1400px;
+  }
+</style>
+<link rel="stylesheet" href="../commun/modele.css">
+
+<script>
+  const FICHE = {
+    nom: 'Garage Lartigue',
+    telephone: '05 58 00 00 00',
+    telLien: '0558000000',
+    email: 'contact@garage-lartigue.fr',
+    adresse: '12 route des Ateliers, 40140 Soustons',
+    horaires: 'Lundi au vendredi, 8h – 18h · Samedi 9h – 12h',
+    galerie: {
+      carrosserie: {
+        titre: 'Carrosserie',
+        photos: [
+          {legende:'Redressage aile avant', fichier:''},
+          {legende:'Peinture cabine',       fichier:''},
+          {legende:'Pare-chocs remis à neuf', fichier:''},
+          {legende:'Débosselage sans peinture', fichier:''},
+          {legende:'Raccord de teinte',     fichier:''},
+          {legende:'Remplacement de custode', fichier:''}
+        ]
+      },
+      mecanique: {
+        titre: 'Mécanique',
+        photos: [
+          {legende:'Distribution complète', fichier:''},
+          {legende:'Banc de diagnostic',    fichier:''},
+          {legende:'Freinage avant/arrière', fichier:''},
+          {legende:'Embrayage',             fichier:''},
+          {legende:'Géométrie des trains',  fichier:''}
+        ]
+      },
+      renovation: {
+        titre: 'Rénovation',
+        photos: [
+          {legende:'Optiques de phares',    fichier:''},
+          {legende:'Polissage carrosserie', fichier:''},
+          {legende:'Intérieur remis à neuf', fichier:''},
+          {legende:'Jantes rénovées',       fichier:''}
+        ]
+      }
+    }
+  };
+</script>
+</head>
+<body>
+
+<header>
+  <a href="#" class="brand">GARAGE<span class="sep">·</span>LARTIGUE</a>
+  <nav>
+    <a href="#prestations" data-nav="prestations">Prestations</a>
+    <a href="#realisations" data-nav="realisations">Réalisations</a>
+    <a href="#atelier" data-nav="atelier">L'atelier</a>
+    <a href="#contact" data-nav="contact">Contact</a>
+  </nav>
+  <div class="head-actions">
+    <a href="tel:0558000000" class="call">
+      <svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.4.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .7-.2 1l-2.3 2.2z"/></svg>
+      <span class="label">05 58 00 00 00</span>
+    </a>
+    <button class="burger" id="burger" aria-label="Ouvrir le menu">
+      <svg viewBox="0 0 24 24"><path d="M3 6h18v2H3zM3 11h18v2H3zM3 16h18v2H3z"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="panel" id="panel">
+  <button class="panel-close" id="panelClose" aria-label="Fermer">✕</button>
+  <a href="#prestations">Prestations</a>
+  <a href="#realisations">Réalisations</a>
+  <a href="#atelier">L'atelier</a>
+  <a href="#contact">Contact</a>
+</div>
+
+<div class="hero">
+  <div class="hero-bg ph" data-ph="Photo — atelier ou véhicule en cours (hero.jpg)"></div>
+  <div class="hero-inner">
+    <p class="kicker">Soustons · Landes · Depuis 1994</p>
+    <h1>Votre voiture<br>entre de bonnes mains</h1>
+    <p class="lede">Mécanique, carrosserie et rénovation dans un atelier familial. Un devis clair avant toute intervention, et une voiture rendue propre.</p>
+    <div class="hero-cta">
+      <a href="#contact" class="btn">Demander un devis</a>
+      <a href="tel:0558000000" class="btn ghost">05 58 00 00 00</a>
+    </div>
+  </div>
+</div>
+
+<div class="strip">
+  <div><b>30 ans</b><span>d'atelier</span></div>
+  <div><b>48 h</b><span>délai moyen de devis</span></div>
+  <div><b>Toutes</b><span>marques acceptées</span></div>
+  <div><b>Agréé</b><span>toutes assurances</span></div>
+</div>
+
+<section id="prestations">
+  <div class="inner">
+    <p class="kicker">01 — Prestations</p>
+    <h2>Ce qu'on fait dans l'atelier</h2>
+    <p class="lede">Quatre métiers sous le même toit : vous n'avez qu'un seul interlocuteur, du diagnostic à la restitution.</p>
+
+    <div class="cards">
+      <div class="card">
+        <div class="ph" data-ph="service-1.jpg"></div>
+        <p class="tag">01</p>
+        <h3>Mécanique générale</h3>
+        <p>Révision, distribution, freinage, embrayage, diagnostic électronique toutes marques.</p>
+      </div>
+      <div class="card">
+        <div class="ph" data-ph="service-2.jpg"></div>
+        <p class="tag">02</p>
+        <h3>Carrosserie & peinture</h3>
+        <p>Redressage, remplacement d'éléments, peinture en cabine avec raccord de teinte.</p>
+      </div>
+      <div class="card">
+        <div class="ph" data-ph="service-3.jpg"></div>
+        <p class="tag">03</p>
+        <h3>Rénovation</h3>
+        <p>Polissage, optiques de phares, jantes, remise en état intérieure avant revente.</p>
+      </div>
+      <div class="card">
+        <div class="ph" data-ph="service-4.jpg"></div>
+        <p class="tag">04</p>
+        <h3>Entretien courant</h3>
+        <p>Vidange, pneumatiques, climatisation, préparation au contrôle technique.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="realisations">
+  <div class="inner">
+    <p class="kicker">02 — Réalisations</p>
+    <h2>Des véhicules passés<br>par l'atelier</h2>
+    <div class="tabs" id="onglets"></div>
+    <div id="galerie"></div>
+  </div>
+</section>
+
+<section id="atelier">
+  <div class="inner split">
+    <div>
+      <p class="kicker">03 — L'atelier</p>
+      <h2>Trente ans<br>au même endroit</h2>
+      <p>Le garage a ouvert en 1994 route des Ateliers. Trois générations de mécaniciens y sont passées, et beaucoup de clients aussi — certains depuis le premier jour.</p>
+      <p>On travaille toutes les marques, sans distinction, avec le même principe depuis le début : un devis avant l'intervention, un appel si quelque chose change en cours de route, et jamais de surprise sur la facture.</p>
+      <a href="#contact" class="btn ghost">Prendre rendez-vous</a>
+    </div>
+    <div class="ph" data-ph="Photo — l'équipe ou l'atelier (equipe.jpg)"></div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="inner">
+    <p class="kicker">04 — Contact</p>
+    <h2>Un devis, une question ?</h2>
+
+    <div class="contact-grid">
+      <div>
+        <form id="form" novalidate>
+          <div class="field" id="f-nom">
+            <label for="nom">Votre nom</label>
+            <input type="text" id="nom" name="nom" autocomplete="name">
+            <span class="msg">Merci d'indiquer votre nom.</span>
+          </div>
+          <div class="field" id="f-email">
+            <label for="email">Votre email</label>
+            <input type="email" id="email" name="email" autocomplete="email">
+            <span class="msg">Merci d'indiquer un email valide.</span>
+          </div>
+          <div class="field">
+            <label for="vehicule">Véhicule (facultatif)</label>
+            <input type="text" id="vehicule" name="vehicule" placeholder="Marque, modèle, année">
+          </div>
+          <div class="field" id="f-message">
+            <label for="message">Votre demande</label>
+            <textarea id="message" name="message"></textarea>
+            <span class="msg">Merci de décrire votre demande.</span>
+          </div>
+          <button type="submit" class="btn" id="submit">Envoyer</button>
+        </form>
+
+        <div class="sent" id="envoye">
+          <div class="ok">✓</div>
+          <h3 id="envoyeTitre">Message prêt à partir</h3>
+          <p id="envoyeTexte"></p>
+        </div>
+      </div>
+
+      <div>
+        <div class="info-line">
+          <span class="k">Adresse</span>
+          <span class="v">12 route des Ateliers<br>40140 Soustons</span>
+        </div>
+        <div class="info-line">
+          <span class="k">Téléphone</span>
+          <span class="v"><a href="tel:0558000000">05 58 00 00 00</a></span>
+        </div>
+        <div class="info-line">
+          <span class="k">Email</span>
+          <span class="v"><a href="mailto:contact@garage-lartigue.fr">contact@garage-lartigue.fr</a></span>
+        </div>
+        <div class="info-line">
+          <span class="k">Horaires</span>
+          <span class="v">Lundi au vendredi, 8h – 18h<br>Samedi, 9h – 12h</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>Garage Lartigue — Soustons</span>
+  <span>Exemple de mise en page · entreprise fictive</span>
+</footer>
+
+<div class="lb" id="lb">
+  <button class="lb-close" id="lbClose" aria-label="Fermer">✕</button>
+  <button class="lb-prev" id="lbPrev" aria-label="Précédent">‹</button>
+  <div class="ph" id="lbPh" data-ph=""></div>
+  <button class="lb-next" id="lbNext" aria-label="Suivant">›</button>
+  <p class="lb-cap" id="lbCap"></p>
+</div>
+
+<div class="demo-flag">
+  <b>Démonstration</b> — entreprise fictive, mise en page adaptable à vos couleurs et vos photos
+</div>
+
+<script src="../commun/modele.js"></script>
+</body>
+</html>

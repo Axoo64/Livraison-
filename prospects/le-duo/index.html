@@ -308,6 +308,16 @@
   @media (prefers-reduced-motion: reduce){
     .narg-tier.premium::before{ animation:none; box-shadow:0 0 10px 2px rgba(140,58,38,0.25); }
   }
+
+  /* Points de couleur pris directement dans les photos des plats (fraise,
+     fleurs, mangue) — pas des couleurs de tendance, du vrai contenu. */
+  .carte-cat h3{ display:flex; align-items:center; gap:9px; }
+  .carte-cat h3::before{
+    content:''; width:8px; height:8px; border-radius:50%; flex-shrink:0;
+    background:var(--dot, var(--chrome));
+  }
+  .carte-cat.sucres h3{ --dot:#a1251f; }     /* rouge fraise, crepe.jpg */
+  .carte-cat.glace h3{ --dot:#e8bd4c; }      /* jaune mangue, mochi.jpg */
 </style>
 </head>
 <body>
@@ -393,7 +403,7 @@
         <div class="menu-line"><span class="name">Jus pago</span><span class="price">3 €</span></div>
       </div>
 
-      <div class="carte-cat">
+      <div class="carte-cat sucres">
         <h3>Nos Sucrés</h3>
         <div class="menu-line"><span class="name">Crêpe au sucre</span><span class="price">3,50 €</span></div>
         <div class="menu-line"><span class="name">Crêpe au caramel chantilly</span><span class="price">4 €</span></div>
@@ -405,7 +415,7 @@
         <div class="menu-line"><span class="name">Fondant au chocolat</span><span class="price">4,50 €</span></div>
       </div>
 
-      <div class="carte-cat">
+      <div class="carte-cat glace">
         <h3>Glacé</h3>
         <div class="menu-line"><span class="name">2 boules de glace<span class="tag">Mangue, citron vert, straciatella, vanille, noisette, caramel</span></span><span class="price">3 €</span></div>
         <div class="menu-line"><span class="name">Mochi glacé x2</span><span class="price">3,50 €</span></div>
